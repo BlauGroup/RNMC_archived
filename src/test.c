@@ -53,6 +53,7 @@ bool test_serialization() {
   char *ronalds_network_dir = "./ronalds_network";
   char *test_network_dir = "./test_network";
   char *test_network_with_db_dir = "./test_network_db";
+  char *test_network_with_db_shard_dir = "./test_network_db_shard";
 
   ReactionNetwork *rnp = new_reaction_network_from_files(ronalds_network_dir, false);
   reaction_network_to_files(rnp, test_network_dir);
@@ -79,17 +80,29 @@ bool test_serialization() {
   reaction_network_to_db(rnp, test_network_with_db_dir, 1000000);
   ReactionNetwork *rnp_from_db = new_reaction_network_from_db(test_network_with_db_dir, false);
   if (reaction_networks_differ(rnp, rnp_from_db)) {
-    puts(ANSI_COLOR_RED "failed: ReactionNetwork to db to ReactionNetwork test" ANSI_COLOR_RESET);
+    puts(ANSI_COLOR_RED "failed: ReactionNetwork to single shard db to ReactionNetwork test" ANSI_COLOR_RESET);
     flag = false;
   } else {
-    puts(ANSI_COLOR_GREEN "passed: ReactionNetwork to db to ReactionNetwork test" ANSI_COLOR_RESET);
+    puts(ANSI_COLOR_GREEN "passed: ReactionNetwork to single shard db db to ReactionNetwork test" ANSI_COLOR_RESET);
   }
+
+  reaction_network_to_db(rnp, test_network_with_db_shard_dir, 1000000);
+  ReactionNetwork *rnp_from_db_shard = new_reaction_network_from_db(test_network_with_db_dir, false);
+  if (reaction_networks_differ(rnp, rnp_from_db_shard)) {
+    puts(ANSI_COLOR_RED "failed: ReactionNetwork to multi shard db to ReactionNetwork test" ANSI_COLOR_RESET);
+    flag = false;
+  } else {
+    puts(ANSI_COLOR_GREEN "passed: ReactionNetwork to multi shard db to ReactionNetwork test" ANSI_COLOR_RESET);
+  }
+
 
   free_reaction_network(rnp);
   free_reaction_network(rnp_copy);
   free_reaction_network(rnp_from_db);
+  free_reaction_network(rnp_from_db_shard);
   status = system("rm -r ./test_network");
   status = system("rm -r ./test_network_db");
+  status = system("rm -r ./test_network_db_shard");
   return flag;
 }
 
