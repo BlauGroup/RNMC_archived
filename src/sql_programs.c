@@ -172,6 +172,7 @@ void free_to_database_sql(ToDatabaseSQL *p) {
   }
 
   sqlite3_finalize(p->insert_metadata_stmt);
+  free(p->insert_reaction_stmt);
   free(p->create_reactions_table);
   free(p->insert_reaction);
   sqlite3_close(p->db);
@@ -284,6 +285,7 @@ void free_from_database_sql(FromDatabaseSQL *p) {
     sqlite3_finalize(p->get_reaction_stmt[shard]);
   }
 
+  free(p->get_reaction_stmt);
   sqlite3_finalize(p->get_metadata_stmt);
 
   sqlite3_close(p->db);

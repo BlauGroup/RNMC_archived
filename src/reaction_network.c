@@ -162,7 +162,7 @@ ReactionNetwork *new_reaction_network_from_db(char *directory, bool logging) {
   initialize_dependency_graph(rnp);
   initialize_propensities(rnp);
 
-
+  free_from_database_sql(sql);
 
   return rnp;
 }
@@ -760,7 +760,7 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size
   }
   fclose(file);
 
-
+  free_to_database_sql(sql);
 
   return 0;
 }
