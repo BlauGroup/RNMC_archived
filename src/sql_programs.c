@@ -5,7 +5,7 @@ char *create_reactions_table_sql(int shard) {
   char shard_string[256];
   char *end;
 
-  sprintf(sql_program, "%d", shard);
+  sprintf(shard_string, "%d", shard);
 
   end = stpcpy(sql_program, "CREATE TABLE reactions_");
   end = stpcpy(end, shard_string);
@@ -33,7 +33,7 @@ char *insert_reaction_sql(int shard) {
   char shard_string[256];
   char *end;
 
-  sprintf(sql_program, "%d", shard);
+  sprintf(shard_string, "%d", shard);
 
   end = stpcpy(sql_program, "INSERT INTO reactions_");
   end = stpcpy(end, shard_string);
@@ -57,7 +57,7 @@ char *get_reaction_sql(int shard) {
   char shard_string[256];
   char *end;
 
-  sprintf(sql_program, "%d", shard);
+  sprintf(shard_string, "%d", shard);
 
   end = stpcpy(sql_program, "SELECT reaction_id,\n");
   end = stpcpy(end, "number_of_reactants,\n");
@@ -247,9 +247,12 @@ FromDatabaseSQL *new_from_database_sql(char *directory) {
   p->shard_size = sqlite3_column_int(p->get_metadata_stmt, 2);
   p->number_of_shards = (p->number_of_reactions / p->shard_size) + 1;
 
+  p->get_reaction = malloc(sizeof(char *) * p->number_of_shards);
   for (shard = 0; shard < p->number_of_shards; shard++) {
     p->get_reaction[shard] = get_reaction_sql(shard);
   }
+
+  p->get_reaction_stmt = malloc(sizeof(sqlite3_stmt *) * p->number_of_shards);
 
   for (shard = 0; shard < p->number_of_shards; shard++) {
     rc = sqlite3_prepare_v2(p->db,
