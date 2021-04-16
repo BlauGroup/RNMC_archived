@@ -61,31 +61,19 @@ ReactionNetwork *new_reaction_network_from_db(char *directory, bool logging) {
   FILE* file;
   sqlite3 *db;
   int return_code;
-  int i;
+  int i, shard;
   int reaction_index;
-  sqlite3_stmt *stmt;
   int rc;
 
   rnp->dir = directory;
   rnp->logging = logging;
 
-  end = stpcpy(path, directory);
-  stpcpy(end, reaction_network_db_postix);
+  FromDatabaseSQL *sql = new_from_database_sql(directory);
 
-  // TODO: check error code here
-  sqlite3_open(path, &db);
-
-  rc = sqlite3_prepare_v2(db, get_metadata, -1, &stmt, NULL);
-  if (rc != SQLITE_OK) {
-    printf("new_reaction_network_from_db error: %s\n", sqlite3_errmsg(db));
-    return NULL;
-  }
 
   // collecting number of species and number of reactions
-  sqlite3_step(stmt);
-  rnp->number_of_species = sqlite3_column_int(stmt, 0);
-  rnp->number_of_reactions = sqlite3_column_int(stmt, 1);
-  sqlite3_finalize(stmt);
+  rnp->number_of_species = sql->number_of_species;
+  rnp->number_of_reactions = sql->number_of_reactions;
 
   // initializing all the arrays to be filled from the database
   rnp->number_of_reactants = malloc(sizeof(int) * rnp->number_of_reactions);
@@ -108,26 +96,12 @@ ReactionNetwork *new_reaction_network_from_db(char *directory, bool logging) {
 
   rnp->rates = malloc(sizeof(double) * rnp->number_of_reactions);
 
-  rc = sqlite3_prepare_v2(db, get_reaction, -1, &stmt, NULL);
-  if (rc != SQLITE_OK) {
-    printf("new_reaction_network_from_db error: %s\n", sqlite3_errmsg(db));
-    return NULL;
-  }
 
   for (i = 0; i < rnp->number_of_reactions; i++) {
-    sqlite3_step(stmt);
-
-    reaction_index = sqlite3_column_int(stmt, 0);
-    rnp->number_of_reactants[reaction_index] = sqlite3_column_int(stmt,1);
-    rnp->number_of_products[reaction_index] = sqlite3_column_int(stmt,2);
-    rnp->reactants[reaction_index][0] = sqlite3_column_int(stmt,3);
-    rnp->reactants[reaction_index][1] = sqlite3_column_int(stmt,4);
-    rnp->products[reaction_index][0] = sqlite3_column_int(stmt,5);
-    rnp->products[reaction_index][1] = sqlite3_column_int(stmt,6);
-    rnp->rates[reaction_index] = sqlite3_column_double(stmt,7);
+    shard = i / sql->shard_size;
+    get_reaction(sql, shard, rnp);
   }
 
-  sqlite3_finalize(stmt);
 
   // read factor_zero
   end = stpcpy(path, directory);
@@ -181,7 +155,7 @@ ReactionNetwork *new_reaction_network_from_db(char *directory, bool logging) {
     fclose(file);
   }
 
-  sqlite3_close(db);
+
 
   rnp->start_time = time(NULL);
 
@@ -691,13 +665,10 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size
   char reaction_string[2048];
 
 
-  int number_of_shards = rnp->number_of_reactions / shard_size;
+  int number_of_shards = (rnp->number_of_reactions / shard_size) + 1;
   ToDatabaseSQL *sql = new_to_database_sql(number_of_shards, shard_size, directory);
 
-  if (create_tables(sql) == -1) {
-    puts("reaction_network_to_db error: failed to create tables");
-    return -1;
-  }
+
 
   insert_metadata(sql,
                   rnp->number_of_species,

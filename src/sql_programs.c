@@ -79,7 +79,8 @@ ToDatabaseSQL *new_to_database_sql(int number_of_shards, int shard_size, char *d
   char *end;
   char path[2048];
   ToDatabaseSQL *p = malloc(sizeof(ToDatabaseSQL));
-
+  char *err;
+  int shard;
 
   if (strlen(directory) > 1024) {
     puts("new_to_database_sql: directory path too long");
@@ -111,7 +112,6 @@ ToDatabaseSQL *new_to_database_sql(int number_of_shards, int shard_size, char *d
   p->insert_reaction_stmt = malloc(sizeof(sqlite3_stmt *) * number_of_shards);
 
 
-  int shard;
 
   for (shard = 0; shard < number_of_shards; shard++) {
     p->create_reactions_table[shard] = create_reactions_table_sql(shard);
@@ -120,6 +120,25 @@ ToDatabaseSQL *new_to_database_sql(int number_of_shards, int shard_size, char *d
 
   p->create_metadata_table = create_metadata_table_sql;
   p->insert_metadata = insert_metadata_sql;
+
+
+  sqlite3_exec(p->db, p->create_metadata_table, NULL, NULL, &err);
+  if (err) {
+    printf("create_tables: %s",err);
+    sqlite3_free(err);
+    return NULL;
+  }
+
+  for (shard = 0; shard < p->number_of_shards; shard++) {
+    sqlite3_exec(p->db, p->create_reactions_table[shard], NULL, NULL, &err);
+    if (err) {
+      printf("create_tables: %s", err);
+      sqlite3_free(err);
+      return NULL;
+    }
+  }
+
+
 
   int rc = sqlite3_prepare_v2(p->db, p->insert_metadata, -1, &p->insert_metadata_stmt, NULL);
   if (rc != SQLITE_OK) {
@@ -159,27 +178,7 @@ void free_to_database_sql(ToDatabaseSQL *p) {
   free(p);
 }
 
-int create_tables(ToDatabaseSQL *p) {
-  char *err;
-  int shard;
-  sqlite3_exec(p->db, p->create_metadata_table, NULL, NULL, &err);
-  if (err) {
-    printf("create_tables: %s",err);
-    sqlite3_free(err);
-    return -1;
-  }
 
-  for (shard = 0; shard < p->number_of_shards; shard++) {
-    sqlite3_exec(p->db, p->create_reactions_table[shard], NULL, NULL, &err);
-    if (err) {
-      printf("create_tables: %s", err);
-      sqlite3_free(err);
-      return -1;
-    }
-  }
-
-  return 0;
-}
 
 void insert_metadata(ToDatabaseSQL *p,
                     int number_of_species,
@@ -216,29 +215,89 @@ void insert_reaction(ToDatabaseSQL *p, int reaction_id, char *reaction_string,
 
 }
 
-FromDatabaseSQL *new_from_database_sql(int number_of_shards) {
+FromDatabaseSQL *new_from_database_sql(char *directory) {
   FromDatabaseSQL *p = malloc(sizeof(FromDatabaseSQL));
-  p->number_of_shards = number_of_shards;
-  p->get_reaction = malloc(sizeof(char *) * number_of_shards);
+  char *end;
+  char path[2048];
+  int shard;
 
-  int i;
 
-  for (i = 0; i < number_of_shards; i++) {
-    p->get_reaction[i] = get_reaction_sql(i);
+  if (strlen(directory) > 1024) {
+    puts("new_from_database_sql: directory path too long");
+    return NULL;
+  }
+
+  end = stpcpy(path, directory);
+  stpcpy(end, reaction_network_db_postix);
+
+  sqlite3_open(path, &p->db);
+
+  p->get_metadata = get_metadata_sql;
+
+  int rc = sqlite3_prepare_v2(p->db, p->get_metadata, -1, &p->get_metadata_stmt, NULL);
+  if (rc != SQLITE_OK) {
+    printf("new_reaction_network_from_db error: %s\n", sqlite3_errmsg(p->db));
+    return NULL;
+  }
+
+  // collecting number of species and number of reactions
+  sqlite3_step(p->get_metadata_stmt);
+  p->number_of_species = sqlite3_column_int(p->get_metadata_stmt, 0);
+  p->number_of_reactions = sqlite3_column_int(p->get_metadata_stmt, 1);
+  p->shard_size = sqlite3_column_int(p->get_metadata_stmt, 2);
+  p->number_of_shards = (p->number_of_reactions / p->shard_size) + 1;
+
+  for (shard = 0; shard < p->number_of_shards; shard++) {
+    p->get_reaction[shard] = get_reaction_sql(shard);
+  }
+
+  for (shard = 0; shard < p->number_of_shards; shard++) {
+    rc = sqlite3_prepare_v2(p->db,
+                            p->get_reaction[shard],
+                            -1,
+                            p->get_reaction_stmt + shard,
+                            NULL);
+
+    if (rc != SQLITE_OK) {
+      printf("new_from_database_sql error: %s", sqlite3_errmsg(p->db));
+      return NULL;
+    }
   }
 
   return p;
 }
 
+
 void free_from_database_sql(FromDatabaseSQL *p) {
 
-  int i;
+  int i, shard;
 
   for (i = 0; i < p->number_of_shards; i++) {
     free(p->get_reaction[i]);
   }
-
   free(p->get_reaction);
+
+  for (shard = 0; shard < p->number_of_shards; shard++) {
+    sqlite3_finalize(p->get_reaction_stmt[shard]);
+  }
+
+  sqlite3_finalize(p->get_metadata_stmt);
+
+  sqlite3_close(p->db);
+
   free(p);
 
+}
+
+void get_reaction(FromDatabaseSQL *p, int shard, ReactionNetwork *rnp) {
+  sqlite3_stmt *stmt = p->get_reaction_stmt[shard];
+  sqlite3_step(stmt);
+  int reaction_index = sqlite3_column_int(stmt, 0);
+  rnp->number_of_reactants[reaction_index] = sqlite3_column_int(stmt,1);
+  rnp->number_of_products[reaction_index] = sqlite3_column_int(stmt,2);
+  rnp->reactants[reaction_index][0] = sqlite3_column_int(stmt,3);
+  rnp->reactants[reaction_index][1] = sqlite3_column_int(stmt,4);
+  rnp->products[reaction_index][0] = sqlite3_column_int(stmt,5);
+  rnp->products[reaction_index][1] = sqlite3_column_int(stmt,6);
+  rnp->rates[reaction_index] = sqlite3_column_double(stmt,7);
 }

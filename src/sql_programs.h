@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sqlite3.h>
+#include "reaction_network.h"
 
 static char reaction_network_db_postix[] = "/rn.sqlite";
 
@@ -21,7 +22,7 @@ static char insert_metadata_sql[] =
   "INSERT INTO metadata ("
   "        number_of_species,"
   "        number_of_reactions,"
-  "        shard_size)"
+  "        shard_size) "
   "VALUES (?1, ?2, ?3);";
 
 static char get_metadata_sql[] =
@@ -53,7 +54,6 @@ ToDatabaseSQL *new_to_database_sql(int number_of_shards,
                                    char *directory);
 
 void free_to_database_sql(ToDatabaseSQL *p);
-int create_tables(ToDatabaseSQL *p);
 void insert_metadata(ToDatabaseSQL *p,
                     int number_of_species,
                     int number_of_reactions,
@@ -74,6 +74,8 @@ void insert_reaction(ToDatabaseSQL *p,
 typedef struct fromDatabaseSQL {
   int number_of_shards;
   int shard_size;
+  int number_of_species;
+  int number_of_reactions;
   sqlite3 *db;
   char *get_metadata;
   char **get_reaction;
@@ -84,22 +86,14 @@ typedef struct fromDatabaseSQL {
 
 
 
-FromDatabaseSQL *new_from_database_sql(int number_of_shards);
+FromDatabaseSQL *new_from_database_sql(char *directory);
+
 void free_from_database_sql(FromDatabaseSQL *p);
-void get_metadata(FromDatabaseSQL *p,
-                  int *number_of_speciesp,
-                  int *number_of_reactionsp);
 
 
 void get_reaction(FromDatabaseSQL *p,
-                  int reaction_id,
-                  int *number_of_reactantsp,
-                  int *number_of_productsp,
-                  int *reactant_1p,
-                  int *reactant_2p,
-                  int *product_1p,
-                  int *product_2p,
-                  double *rate
+                  int shard,
+                  ReactionNetwork *rnp
                   );
 
 #endif
