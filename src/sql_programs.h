@@ -2,12 +2,20 @@
 #define SQL_PROGRAMS_H
 
 // if reactants and products don't exist, we use the value -1
-static char create_tables[] =
-  "CREATE TABLE metadata ("
-  "        number_of_species   INTEGER NOT NULL,"
-  "        number_of_reactions INTEGER NOT NULL"
-  ");"
 
+typedef struct toDatabaseSQL {
+} ToDatabaseSQL;
+
+typedef struct fromDatabaseSQL {
+} FromDatabaseSQL;
+
+char create_metadata_table[] = "CREATE TABLE metadata ("
+                               "        number_of_species   INTEGER NOT NULL,"
+                               "        number_of_reactions INTEGER NOT NULL,"
+                               "        shard_size          INTEGER NOT NULL"
+                               ");";
+
+char create_reactions_table[] =
   "CREATE TABLE reactions ("
   "        reaction_id         INTEGER NOT NULL PRIMARY KEY,"
   "        reaction_string     TEXT NOT NULL,"
@@ -23,14 +31,15 @@ static char create_tables[] =
   "CREATE UNIQUE INDEX reaction_string_idx ON reactions (reaction_string)";
 
 
-static char insert_metadata[] =
+char insert_metadata[] =
   "INSERT INTO metadata ("
   "        number_of_species,"
-  "        number_of_reactions)"
-  "VALUES (?1, ?2);";
+  "        number_of_reactions,"
+  "        shard_size)"
+  "VALUES (?1, ?2, ?3);";
 
 
-static char insert_reaction[] =
+char insert_reaction[] =
   "INSERT INTO reactions ("
   "        reaction_id,"
   "        reaction_string,"
@@ -43,10 +52,10 @@ static char insert_reaction[] =
   "        rate) "
   "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);";
 
-static char get_metadata[] =
+char get_metadata[] =
   "SELECT * FROM metadata;";
 
-static char get_reactions[] =
+char get_reactions[] =
   "SELECT reaction_id,"
   "       number_of_reactants,"
   "       number_of_products,"

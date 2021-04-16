@@ -79,7 +79,7 @@ int reaction_network_to_files(ReactionNetwork *rnp, char *directory);
 
 // like reaction_network_to_files except we serialize the reaction network to a
 // sqlite database.
-int reaction_network_to_db(ReactionNetwork *rnp, char *directory);
+int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size);
 
 
 bool reaction_networks_differ(ReactionNetwork *rnpa, ReactionNetwork *rnpb);

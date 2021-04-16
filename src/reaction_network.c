@@ -681,8 +681,9 @@ int reaction_network_to_files(ReactionNetwork *rnp, char *directory) {
 }
 
 
-int reaction_network_to_db(ReactionNetwork *rnp, char *directory) {
+int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size) {
   char *end;
+  char *err;
   char path[2048];
   int i;
   FILE* file;
@@ -694,7 +695,7 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory) {
   char reaction_string[2048];
 
 
-
+  int number_of_shards = rnp->number_of_reactions / shard_size;
 
   if (strlen(directory) > 1024) {
     puts("reaction_network_to_db: directory path too long");
@@ -716,13 +717,30 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory) {
   end = stpcpy(path, directory);
   stpcpy(end, reaction_network_db_postix);
 
+
+
+
   // TODO: check error code here
   sqlite3_open(path, &db);
 
 
+
+
   // create tables
   // TODO: check error here
-  sqlite3_exec(db, create_tables, NULL, NULL, NULL);
+  sqlite3_exec(db, create_metadata_table, NULL, NULL, &err);
+  if (err) {
+    printf("reaction_network_to_db: %s",err);
+    sqlite3_free(err);
+    return -1;
+  }
+
+  sqlite3_exec(db, create_reactions_table, NULL, NULL, &err);
+  if (err) {
+    printf("reaction_network_to_db: %s",err);
+    sqlite3_free(err);
+    return -1;
+  }
 
 
   // insert metadata
@@ -734,6 +752,7 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory) {
 
   sqlite3_bind_int(stmt, 1, rnp->number_of_species);
   sqlite3_bind_int(stmt, 2, rnp->number_of_reactions);
+  sqlite3_bind_int(stmt, 3, shard_size);
   sqlite3_step(stmt);
   sqlite3_finalize(stmt);
 
