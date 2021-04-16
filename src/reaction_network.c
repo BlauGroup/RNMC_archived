@@ -3,7 +3,7 @@
 
 
 
-char *reaction_network_db_postix = "/rn.sqlite";
+
 char *number_of_species_postfix = "/number_of_species";
 char *number_of_reactions_postfix = "/number_of_reactions";
 char *number_of_reactants_postfix = "/number_of_reactants";
@@ -683,82 +683,29 @@ int reaction_network_to_files(ReactionNetwork *rnp, char *directory) {
 
 int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size) {
   char *end;
-  char *err;
   char path[2048];
   int i;
   FILE* file;
-  sqlite3 *db;
-  sqlite3_stmt *stmt;
-  int rc;
   char reactants_string[1024];
   char products_string[1024];
   char reaction_string[2048];
 
 
   int number_of_shards = rnp->number_of_reactions / shard_size;
+  ToDatabaseSQL *sql = new_to_database_sql(number_of_shards, shard_size, directory);
 
-  if (strlen(directory) > 1024) {
-    puts("reaction_network_to_db: directory path too long");
+  if (create_tables(sql) == -1) {
+    puts("reaction_network_to_db error: failed to create tables");
     return -1;
   }
 
-  DIR *dir = opendir(directory);
-  if (dir) {
-    puts("reaction_network_to_db: directory already exists");
-    closedir(dir);
-    return -1;
-  }
-
-  if (mkdir(directory, 0777)) {
-    puts("reaction_network_to_db: failed to make directory");
-    return -1;
-  }
-
-  end = stpcpy(path, directory);
-  stpcpy(end, reaction_network_db_postix);
-
-
-  // TODO: check error code here
-  sqlite3_open(path, &db);
-
-  // create tables
-  // TODO: check error here
-  sqlite3_exec(db, create_metadata_table, NULL, NULL, &err);
-  if (err) {
-    printf("reaction_network_to_db: %s",err);
-    sqlite3_free(err);
-    return -1;
-  }
-
-  sqlite3_exec(db, create_reactions_table, NULL, NULL, &err);
-  if (err) {
-    printf("reaction_network_to_db: %s",err);
-    sqlite3_free(err);
-    return -1;
-  }
-
-
-  // insert metadata
-  rc = sqlite3_prepare_v2(db, insert_metadata, -1, &stmt, NULL);
-  if (rc != SQLITE_OK) {
-    printf("reaction_network_to_db error: %s", sqlite3_errmsg(db));
-    return -1;
-  }
-
-  sqlite3_bind_int(stmt, 1, rnp->number_of_species);
-  sqlite3_bind_int(stmt, 2, rnp->number_of_reactions);
-  sqlite3_bind_int(stmt, 3, shard_size);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  insert_metadata(sql,
+                  rnp->number_of_species,
+                  rnp->number_of_reactions,
+                  shard_size);
 
 
   // insert reactions
-  rc = sqlite3_prepare_v2(db, insert_reaction, -1, &stmt, NULL);
-  if (rc != SQLITE_OK) {
-    printf("reaction_network_to_db error: %s", sqlite3_errmsg(db));
-    return -1;
-  }
-
   for (i = 0; i < rnp->number_of_reactions; i++) {
 
     // generating the reaction string which we use to identify repeats
@@ -798,27 +745,18 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size
       }
     }
     sprintf(reaction_string, "%s->%s", reactants_string, products_string);
+    insert_reaction(sql,
+                    i,
+                    reaction_string,
+                    rnp->number_of_reactants[i],
+                    rnp->number_of_products[i],
+                    rnp->reactants[i][0],
+                    rnp->reactants[i][1],
+                    rnp->products[i][0],
+                    rnp->products[i][1],
+                    rnp->rates[i]);
 
-    sqlite3_reset(stmt);
-    sqlite3_clear_bindings(stmt);
-
-    sqlite3_bind_int(stmt, 1, i);
-    sqlite3_bind_text(stmt, 2, reaction_string, -1, NULL);
-    sqlite3_bind_int(stmt, 3, rnp->number_of_reactants[i]);
-    sqlite3_bind_int(stmt, 4, rnp->number_of_products[i]);
-    sqlite3_bind_int(stmt, 5, rnp->reactants[i][0]);
-    sqlite3_bind_int(stmt, 6, rnp->reactants[i][1]);
-    sqlite3_bind_int(stmt, 7, rnp->products[i][0]);
-    sqlite3_bind_int(stmt, 8, rnp->products[i][1]);
-    sqlite3_bind_double(stmt, 9, rnp->rates[i]);
-    sqlite3_step(stmt);
   }
-
-  sqlite3_finalize(stmt);
-
-
-
-
 
   // save factor_zero
   end = stpcpy(path, directory);
@@ -852,7 +790,7 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size
   fclose(file);
 
 
-  sqlite3_close(db);
+
   return 0;
 }
 

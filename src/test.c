@@ -76,7 +76,7 @@ bool test_serialization() {
   }
 
 
-  reaction_network_to_db(rnp, test_network_with_db_dir, 20);
+  reaction_network_to_db(rnp, test_network_with_db_dir, 1000000);
   ReactionNetwork *rnp_from_db = new_reaction_network_from_db(test_network_with_db_dir, false);
   if (reaction_networks_differ(rnp, rnp_from_db)) {
     puts(ANSI_COLOR_RED "failed: ReactionNetwork to db to ReactionNetwork test" ANSI_COLOR_RESET);

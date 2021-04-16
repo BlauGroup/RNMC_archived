@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <time.h>
-#include <sqlite3.h>
 
 typedef struct dependentsNode {
   int number_of_dependents; // number of reactions that depend on current reaction.
