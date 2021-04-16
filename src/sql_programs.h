@@ -4,9 +4,16 @@
 // if reactants and products don't exist, we use the value -1
 
 typedef struct toDatabaseSQL {
+  int number_of_shards;
+  char *create_metadata_table;
+  char **create_reactions_table;
+  char *insert_metadata;
+  char **insert_reaction;
 } ToDatabaseSQL;
 
 typedef struct fromDatabaseSQL {
+  char *get_metadata;
+  char **get_reaction;
 } FromDatabaseSQL;
 
 char create_metadata_table[] = "CREATE TABLE metadata ("
@@ -55,7 +62,7 @@ char insert_reaction[] =
 char get_metadata[] =
   "SELECT * FROM metadata;";
 
-char get_reactions[] =
+char get_reaction[] =
   "SELECT reaction_id,"
   "       number_of_reactants,"
   "       number_of_products,"
@@ -65,6 +72,5 @@ char get_reactions[] =
   "       product_2,"
   "       rate "
   "FROM reactions;";
-
 
 #endif

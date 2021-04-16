@@ -108,7 +108,7 @@ ReactionNetwork *new_reaction_network_from_db(char *directory, bool logging) {
 
   rnp->rates = malloc(sizeof(double) * rnp->number_of_reactions);
 
-  rc = sqlite3_prepare_v2(db, get_reactions, -1, &stmt, NULL);
+  rc = sqlite3_prepare_v2(db, get_reaction, -1, &stmt, NULL);
   if (rc != SQLITE_OK) {
     printf("new_reaction_network_from_db error: %s\n", sqlite3_errmsg(db));
     return NULL;
