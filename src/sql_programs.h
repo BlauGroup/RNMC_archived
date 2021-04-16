@@ -5,16 +5,23 @@
 
 typedef struct toDatabaseSQL {
   int number_of_shards;
-  char *create_metadata_table;
   char **create_reactions_table;
-  char *insert_metadata;
   char **insert_reaction;
 } ToDatabaseSQL;
 
 typedef struct fromDatabaseSQL {
-  char *get_metadata;
+  int number_of_shards;
   char **get_reaction;
 } FromDatabaseSQL;
+
+
+ToDatabaseSQL *new_to_database_sql(int number_of_shards);
+void free_to_database_sql(ToDatabaseSQL *p);
+
+FromDatabaseSQL *new_from_database_sql(int number_of_shards);
+void free_from_database_sql(FromDatabaseSQL *p);
+
+
 
 char create_metadata_table[] = "CREATE TABLE metadata ("
                                "        number_of_species   INTEGER NOT NULL,"
