@@ -718,13 +718,8 @@ int reaction_network_to_db(ReactionNetwork *rnp, char *directory, int shard_size
   stpcpy(end, reaction_network_db_postix);
 
 
-
-
   // TODO: check error code here
   sqlite3_open(path, &db);
-
-
-
 
   // create tables
   // TODO: check error here
