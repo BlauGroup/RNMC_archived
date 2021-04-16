@@ -83,10 +83,10 @@ bool test_serialization() {
     puts(ANSI_COLOR_RED "failed: ReactionNetwork to single shard db to ReactionNetwork test" ANSI_COLOR_RESET);
     flag = false;
   } else {
-    puts(ANSI_COLOR_GREEN "passed: ReactionNetwork to single shard db db to ReactionNetwork test" ANSI_COLOR_RESET);
+    puts(ANSI_COLOR_GREEN "passed: ReactionNetwork to single shard db to ReactionNetwork test" ANSI_COLOR_RESET);
   }
 
-  reaction_network_to_db(rnp, test_network_with_db_shard_dir, 1000000);
+  reaction_network_to_db(rnp, test_network_with_db_shard_dir, 20);
   ReactionNetwork *rnp_from_db_shard = new_reaction_network_from_db(test_network_with_db_dir, false);
   if (reaction_networks_differ(rnp, rnp_from_db_shard)) {
     puts(ANSI_COLOR_RED "failed: ReactionNetwork to multi shard db to ReactionNetwork test" ANSI_COLOR_RESET);
