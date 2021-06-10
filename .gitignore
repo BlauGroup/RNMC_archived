@@ -1,2 +1,3 @@
 test_materials/ronalds_network/simulation_histories
-builddir
+build
+compile_commands.json
