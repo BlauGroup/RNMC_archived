@@ -26,7 +26,7 @@ common_files = [
 #   'src/sampler.c',
 #   'src/simulation.c',
 #   'src/solvers.c',
-#   'src/dispatcher.c',
+   'src/dispatcher.c',
 #   'src/sql_programs.c'
 ]
 

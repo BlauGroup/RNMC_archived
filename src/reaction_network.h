@@ -2,8 +2,11 @@
 #define REACTION_NETWORK_H
 
 #include <pthread.h>
-#include <time.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <sqlite3.h>
+#include <stdio.h>
+
 
 typedef struct dependentsNode {
   int number_of_dependents; // number of reactions that depend on current reaction.
@@ -16,13 +19,11 @@ typedef struct dependentsNode {
 // struct for storing the static reaction network state which
 // will be shared across all simulation instances
 
-DependentsNode *new_dependents_node();
+void initialize_dependents_node(DependentsNode *dnp);
 void free_dependents_node(DependentsNode *dnp);
 
 typedef struct reactionNetwork {
 
-  // filled out by reaction_network_from_file
-  char *dir; // directory where reaction network serialization files are
   int number_of_species;
   int number_of_reactions;
   // we assume that each reaction has zero, one or two reactants
@@ -49,6 +50,16 @@ typedef struct reactionNetwork {
   DependentsNode *dependency_graph;
 } ReactionNetwork;
 
+ReactionNetwork *new_reaction_network(sqlite3 *db);
+void free_reaction_network(ReactionNetwork *rnp);
+
+DependentsNode *get_dependency_node(ReactionNetwork *rnp, int index);
+void compute_dependency_node(ReactionNetwork *rnp, int reaction);
+void initialize_dependency_graph(ReactionNetwork *rnp);
+
+
+double compute_propensity(ReactionNetwork *rnp, int *state, int reaction);
+void initialize_propensities(ReactionNetwork *rnp);
 
 
 #endif
