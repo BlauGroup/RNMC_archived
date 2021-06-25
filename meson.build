@@ -23,11 +23,10 @@ math_dep = cc.find_library('m', required : false)
 
 common_files = [
    'src/reaction_network.c',
-#   'src/sampler.c',
-#   'src/simulation.c',
-#   'src/solvers.c',
+   'src/sampler.c',
+   'src/simulation.c',
+   'src/solvers.c',
    'src/dispatcher.c',
-#   'src/sql_programs.c'
 ]
 
 RNMC_include = include_directories('src')
