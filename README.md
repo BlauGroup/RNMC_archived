@@ -10,7 +10,7 @@ RNMC depends on [GSL](https://www.gnu.org/software/gsl/) for pseudo random numbe
 
 RNMC_native is built using meson and ninja:
 ```
-meson setup build
+CC=clang meson setup --buildtype=debug build
 cd build
 ninja
 meson test
