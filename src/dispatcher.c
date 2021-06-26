@@ -37,56 +37,62 @@ unsigned long int get_seed(SeedQueue *sqp) {
 }
 
 
-HistoryNode *new_history_node(SimulationHistory *simulation_history) {
-    HistoryNode *p = malloc(sizeof(HistoryNode));
-    p->simulation_history = simulation_history;
-    p->next = NULL;
-    return p;
+HistoryNode *new_history_node(SimulationHistory *simulation_history, int seed) {
+    HistoryNode *history_node = malloc(sizeof(HistoryNode));
+    history_node->seed = seed;
+    history_node->simulation_history = simulation_history;
+    history_node->next = NULL;
+    return history_node;
 }
 
-void free_history_node(HistoryNode *hnp) {
-    free(hnp);
+
+void free_history_node(HistoryNode *history_node) {
+    free(history_node);
 }
 
 HistoryQueue *new_history_queue() {
-    HistoryQueue *hqp = malloc(sizeof(HistoryQueue));
-    pthread_mutex_init(&hqp->mtx, NULL);
-    hqp->history_node = NULL;
-    return hqp;
+    HistoryQueue *history_queue = malloc(sizeof(HistoryQueue));
+    pthread_mutex_init(&history_queue->mtx, NULL);
+    history_queue->history_node = NULL;
+    return history_queue;
 }
 
-void free_history_queue(HistoryQueue *hqp) {
-    pthread_mutex_destroy(&hqp->mtx);
-    free(hqp);
+void free_history_queue(HistoryQueue *history_queue) {
+    pthread_mutex_destroy(&history_queue->mtx);
+    free(history_queue);
 }
 
 void insert_simulation_history(
-    HistoryQueue *hqp,
-    SimulationHistory *shp) {
+    HistoryQueue *history_queue,
+    SimulationHistory *simulation_history,
+    int seed
+    ) {
 
-    pthread_mutex_lock(&hqp->mtx);
-    HistoryNode *hnp = new_history_node(shp);
-    hnp->next = hqp->history_node;
-    hqp->history_node = hnp;
-    pthread_mutex_unlock(&hqp->mtx);
+    pthread_mutex_lock(&history_queue->mtx);
+    HistoryNode *history_node = new_history_node(simulation_history, seed);
+    history_node->next = history_queue->history_node;
+    history_queue->history_node = history_node;
+    pthread_mutex_unlock(&history_queue->mtx);
 }
 
-SimulationHistory *get_simulation_history(HistoryQueue *hqp) {
+int get_simulation_history(
+    HistoryQueue *history_queue,
+    SimulationHistory **simulation_history) {
+
+    int seed = - 1;
+    pthread_mutex_lock(&history_queue->mtx);
+    HistoryNode *history_node = history_queue->history_node;
 
 
-    pthread_mutex_lock(&hqp->mtx);
-    SimulationHistory *result = NULL;
-    HistoryNode *node = hqp->history_node;
-
-
-    if (node) {
-        hqp->history_node = node->next;
-        result = node->simulation_history;
-        free_history_node(node);
+    if (history_node) {
+        history_queue->history_node = history_node->next;
+        *simulation_history = history_node->simulation_history;
+        seed = history_node->seed;
+        free_history_node(history_node);
     }
 
-    pthread_mutex_unlock(&hqp->mtx);
-    return result;
+    pthread_mutex_unlock(&history_queue->mtx);
+    return seed;
 
 }
 
@@ -112,45 +118,48 @@ Dispatcher *new_dispatcher(
     return dp;
 }
 
-void free_dispatcher(Dispatcher *dp) {
-    sqlite3_close(dp->db);
-    free_reaction_network(dp->rn);
-    free_history_queue(dp->hq);
-    free_seed_queue(dp->sq);
-    free(dp->threads);
-    free(dp);
+void free_dispatcher(Dispatcher *dispatcher) {
+    sqlite3_close(dispatcher->db);
+    free_reaction_network(dispatcher->rn);
+    free_history_queue(dispatcher->hq);
+    free_seed_queue(dispatcher->sq);
+    free(dispatcher->threads);
+    free(dispatcher);
 }
 
 
-void run_dispatcher(Dispatcher *dp) {
+void run_dispatcher(Dispatcher *dispatcher) {
   int i;
-  SimulatorPayload *sp;
-  if (dp->logging)
-    printf("spawning %d threads\n",dp->number_of_threads);
+  SimulatorPayload *simulation;
 
-  for (i = 0; i < dp->number_of_threads; i++) {
-    sp = new_simulator_payload(
-        dp->rn,
-        dp->hq,
+  for (i = 0; i < dispatcher->number_of_threads; i++) {
+    simulation = new_simulator_payload(
+        dispatcher->rn,
+        dispatcher->hq,
         tree,
-        dp->sq,
-        dp->step_cutoff);
+        dispatcher->sq,
+        dispatcher->step_cutoff);
 
-    pthread_create(dp->threads + i, NULL, run_simulator, (void *)sp);
-  }
-
-  if (dp->logging)
-    puts("dispatcher waiting for threads to terminate");
-
-  for (i = 0; i < dp->number_of_threads; i++) {
-    pthread_join(dp->threads[i],NULL);
+    pthread_create(
+        dispatcher->threads + i,
+        NULL,
+        run_simulator,
+        (void *)simulation);
   }
 
 
-  SimulationHistory *shp = get_simulation_history(dp->hq);
-  while (shp) {
-      free_simulation_history(shp);
-      shp = get_simulation_history(dp->hq);
+  for (i = 0; i < dispatcher->number_of_threads; i++) {
+    pthread_join(dispatcher->threads[i],NULL);
+  }
+
+
+  SimulationHistory *simulation_history = NULL;
+
+  int seed = get_simulation_history(dispatcher->hq, &simulation_history);
+
+  while (seed != -1) {
+      free_simulation_history(simulation_history);
+      seed = get_simulation_history(dispatcher->hq, &simulation_history);
   }
 
 }
@@ -186,7 +195,7 @@ void *run_simulator(void *simulator_payload) {
 
         run_for(simulation, sp->step_cutoff);
 
-        insert_simulation_history(sp->hq, simulation->history);
+        insert_simulation_history(sp->hq, simulation->history, seed);
         free_simulation(simulation);
         seed = get_seed(sp->sq);
     }

@@ -22,10 +22,11 @@ unsigned long int get_seed(SeedQueue *sqp);
 
 typedef struct historyNode {
     SimulationHistory *simulation_history;
+    int seed;
     struct historyNode *next;
 } HistoryNode;
 
-HistoryNode *new_history_node(SimulationHistory *simulation_history);
+HistoryNode *new_history_node(SimulationHistory *simulation_history, int seed);
 
 // simulation history shouldn't be freed here.
 // will be freed by dispatcher
@@ -44,8 +45,13 @@ HistoryQueue *new_history_queue();
 void free_history_queue(HistoryQueue *hqp);
 
 
-void insert_simulation_history(HistoryQueue *hqp, SimulationHistory *shp);
-SimulationHistory *get_simulation_history(HistoryQueue *hqp);
+void insert_simulation_history(HistoryQueue *hqp, SimulationHistory *shp, int seed);
+
+// get a simulation history and return the seed
+// if none to be found, return -1
+int get_simulation_history(
+    HistoryQueue *history_queue,
+    SimulationHistory **simulation_history);
 
 typedef struct dispatcher {
     sqlite3 *db;

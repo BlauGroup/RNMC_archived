@@ -49,6 +49,8 @@ Simulation *new_simulation(ReactionNetwork *rnp,
                            unsigned long int seed,
                            SolveType type);
 
+// the simulation history is passed to the dispatcher
+// don't free it when freeing the simulation state
 void free_simulation(Simulation *sp);
 
 bool step(Simulation *sp);
