@@ -77,6 +77,8 @@ Dispatcher *new_dispatcher(
 void free_dispatcher(Dispatcher *dispatcher);
 void run_dispatcher(Dispatcher *dispatcher);
 
+#define TRANSACTION_SIZE 10000
+
 void record_simulation_history(
     Dispatcher *dispatcher,
     SimulationHistory *simulation_history,

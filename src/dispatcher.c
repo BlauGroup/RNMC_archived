@@ -179,7 +179,6 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
     while (seed != -1) {
 
-        printf("inserting simulation history %d\n", seed);
         record_simulation_history(dispatcher, simulation_history, seed);
         seed = get_simulation_history(dispatcher->hq, &simulation_history);
     }
@@ -214,6 +213,12 @@ void record_simulation_history(
             rc = sqlite3_step(dispatcher->insert_trajectory_stmt);
             sqlite3_reset(dispatcher->insert_trajectory_stmt);
             count += 1;
+
+            if (count % TRANSACTION_SIZE == 0) {
+                sqlite3_exec(dispatcher->db, "COMMIT", 0, 0, 0);
+                sqlite3_exec(dispatcher->db, "BEGIN", 0, 0, 0);
+            }
+
         }
         chunk = chunk->next_chunk;
     }
