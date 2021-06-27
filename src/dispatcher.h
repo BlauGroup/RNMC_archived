@@ -55,6 +55,7 @@ int get_simulation_history(
 
 typedef struct dispatcher {
     sqlite3 *db;
+    sqlite3_stmt *insert_trajectory_stmt;
     ReactionNetwork *rn;
     HistoryQueue *hq;
     SeedQueue *sq;
@@ -73,8 +74,13 @@ Dispatcher *new_dispatcher(
     int step_cutoff,
     bool logging);
 
-void free_dispatcher(Dispatcher *dp);
-void run_dispatcher(Dispatcher *dp);
+void free_dispatcher(Dispatcher *dispatcher);
+void run_dispatcher(Dispatcher *dispatcher);
+
+void record_simulation_history(
+    Dispatcher *dispatcher,
+    SimulationHistory *simulation_history,
+    int seed);
 
 
 typedef struct simulatorPayload {
@@ -93,7 +99,7 @@ SimulatorPayload *new_simulator_payload(
     int step_cutoff
     );
 
-void free_simulator_payload(SimulatorPayload *sp);
+void free_simulator_payload(SimulatorPayload *simulator_payload);
 void *run_simulator(void *simulator_payload);
 
 
