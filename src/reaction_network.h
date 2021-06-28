@@ -19,8 +19,8 @@ typedef struct dependentsNode {
 // struct for storing the static reaction network state which
 // will be shared across all simulation instances
 
-void initialize_dependents_node(DependentsNode *dnp);
-void free_dependents_node(DependentsNode *dnp);
+void initialize_dependents_node(DependentsNode *dependents_node);
+void free_dependents_node(DependentsNode *dependents_node);
 
 typedef struct reactionNetwork {
 
@@ -50,7 +50,7 @@ typedef struct reactionNetwork {
   DependentsNode *dependency_graph;
 } ReactionNetwork;
 
-ReactionNetwork *new_reaction_network(sqlite3 *db);
+ReactionNetwork *new_reaction_network(sqlite3 *database);
 void free_reaction_network(ReactionNetwork *rnp);
 
 DependentsNode *get_dependency_node(ReactionNetwork *rnp, int index);

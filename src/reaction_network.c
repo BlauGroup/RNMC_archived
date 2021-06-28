@@ -1,16 +1,16 @@
 #include "reaction_network.h"
 
-void initialize_dependents_node(DependentsNode *dnp) {
-  dnp->number_of_dependents = -1;
-  dnp->dependents = NULL;
-  pthread_mutex_init(&dnp->mutex, NULL);
+void initialize_dependents_node(DependentsNode *dependents_node) {
+  dependents_node->number_of_dependents = -1;
+  dependents_node->dependents = NULL;
+  pthread_mutex_init(&dependents_node->mutex, NULL);
 }
 
-void free_dependents_node(DependentsNode *dnp) {
+void free_dependents_node(DependentsNode *dependents_node) {
   // we don't free dnp because they get initialized as a whole chunk
-  if (dnp->dependents)
-    free(dnp->dependents);
-  pthread_mutex_destroy(&dnp->mutex);
+  if (dependents_node->dependents)
+    free(dependents_node->dependents);
+  pthread_mutex_destroy(&dependents_node->mutex);
 }
 
 char sql_get_metadata[] =
@@ -24,7 +24,7 @@ char sql_get_reactions[] =
     "reactant_1, reactant_2, product_1, product_2, rate FROM reactions;";
 
 
-ReactionNetwork *new_reaction_network(sqlite3 *db) {
+ReactionNetwork *new_reaction_network(sqlite3 *database) {
     ReactionNetwork *rnp = malloc(sizeof(ReactionNetwork));
 
 
@@ -36,9 +36,11 @@ ReactionNetwork *new_reaction_network(sqlite3 *db) {
     int species_index, reaction_index;
 
 
-    rc = sqlite3_prepare_v2(db, sql_get_metadata, -1, &get_metadata_stmt, NULL);
+    rc = sqlite3_prepare_v2(
+        database, sql_get_metadata, -1, &get_metadata_stmt, NULL);
+
     if (rc != SQLITE_OK) {
-        printf("new_reaction_network error %s\n", sqlite3_errmsg(db));
+        printf("new_reaction_network error %s\n", sqlite3_errmsg(database));
         return NULL;
     }
 
@@ -76,9 +78,10 @@ ReactionNetwork *new_reaction_network(sqlite3 *db) {
     rnp->rates = malloc(sizeof(double) * rnp->number_of_reactions);
 
 
-    rc = sqlite3_prepare_v2(db, sql_get_reactions, -1, &get_reactions_stmt, NULL);
+    rc = sqlite3_prepare_v2(
+        database, sql_get_reactions, -1, &get_reactions_stmt, NULL);
     if (rc != SQLITE_OK) {
-        printf("new_reaction_network error %s\n", sqlite3_errmsg(db));
+        printf("new_reaction_network error %s\n", sqlite3_errmsg(database));
         return NULL;
     }
 
@@ -99,9 +102,10 @@ ReactionNetwork *new_reaction_network(sqlite3 *db) {
     // allocate initial state
     rnp->initial_state = malloc(sizeof(int) * rnp->number_of_species);
 
-    rc = sqlite3_prepare_v2(db, sql_get_initial_state, -1, &get_initial_state_stmt, NULL);
+    rc = sqlite3_prepare_v2(
+        database, sql_get_initial_state, -1, &get_initial_state_stmt, NULL);
     if (rc != SQLITE_OK) {
-        printf("new_reaction_network error %s\n", sqlite3_errmsg(db));
+        printf("new_reaction_network error %s\n", sqlite3_errmsg(database));
         return NULL;
     }
 
@@ -109,7 +113,8 @@ ReactionNetwork *new_reaction_network(sqlite3 *db) {
     for (i = 0; i < rnp->number_of_species; i++) {
         sqlite3_step(get_initial_state_stmt);
         species_index = sqlite3_column_int(get_initial_state_stmt,0);
-        rnp->initial_state[species_index] = sqlite3_column_int(get_initial_state_stmt,1);
+        rnp->initial_state[species_index] =
+            sqlite3_column_int(get_initial_state_stmt,1);
     }
 
 
