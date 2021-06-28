@@ -151,6 +151,22 @@ void free_dispatcher(Dispatcher *dispatcher) {
     free(dispatcher);
 }
 
+void dispatcher_log(Dispatcher *dispatcher, int seed) {
+    if (dispatcher->logging)
+    {
+        time_t rawtime;
+        struct tm * timeinfo;
+
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf(
+            "[%d:%d:%d] writing trajectory %d to database\n",
+            timeinfo->tm_hour,
+            timeinfo->tm_min,
+            timeinfo->tm_sec,
+            seed);
+    }
+}
 
 void run_dispatcher(Dispatcher *dispatcher) {
     int i;
@@ -185,6 +201,8 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
         while (seed != -1) {
 
+            dispatcher_log(dispatcher, seed);
+
             record_simulation_history(
                 dispatcher,
                 simulation_history, seed);
@@ -195,8 +213,9 @@ void run_dispatcher(Dispatcher *dispatcher) {
         }
 
         for (i = 0; i < dispatcher->number_of_threads; i++) {
-            if (pthread_tryjoin_np(dispatcher->threads[i],NULL) == 0)
-                dispatcher->running[i] = false;
+            if (dispatcher->running[i])
+                if (pthread_tryjoin_np(dispatcher->threads[i],NULL) == 0)
+                    dispatcher->running[i] = false;
         }
 
         flag = false;

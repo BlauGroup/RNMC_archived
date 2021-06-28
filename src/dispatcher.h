@@ -4,6 +4,7 @@
 
 #include <pthread.h>
 #include <sqlite3.h>
+#include <time.h>
 #include "reaction_network.h"
 #include "simulation.h"
 
@@ -77,6 +78,8 @@ Dispatcher *new_dispatcher(
 
 void free_dispatcher(Dispatcher *dispatcher);
 void run_dispatcher(Dispatcher *dispatcher);
+
+void dispatcher_log(Dispatcher *dispatcher, int seed);
 
 #define TRANSACTION_SIZE 10000
 
