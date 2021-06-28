@@ -89,13 +89,27 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
     for (i = 0; i < rnp->number_of_reactions; i++) {
         sqlite3_step(get_reactions_stmt);
         reaction_index = sqlite3_column_int(get_reactions_stmt,0);
-        rnp->number_of_reactants[reaction_index] = sqlite3_column_int(get_reactions_stmt,1);
-        rnp->number_of_products[reaction_index] = sqlite3_column_int(get_reactions_stmt,2);
-        rnp->reactants[reaction_index][0] = sqlite3_column_int(get_reactions_stmt,3);
-        rnp->reactants[reaction_index][1] = sqlite3_column_int(get_reactions_stmt,4);
-        rnp->products[reaction_index][0] = sqlite3_column_int(get_reactions_stmt,5);
-        rnp->products[reaction_index][1] = sqlite3_column_int(get_reactions_stmt,6);
-        rnp->rates[reaction_index] = sqlite3_column_double(get_reactions_stmt,7);
+
+        rnp->number_of_reactants[reaction_index] =
+            sqlite3_column_int(get_reactions_stmt,1);
+
+        rnp->number_of_products[reaction_index] =
+            sqlite3_column_int(get_reactions_stmt,2);
+
+        rnp->reactants[reaction_index][0] =
+            sqlite3_column_int(get_reactions_stmt,3);
+
+        rnp->reactants[reaction_index][1] =
+            sqlite3_column_int(get_reactions_stmt,4);
+
+        rnp->products[reaction_index][0] =
+            sqlite3_column_int(get_reactions_stmt,5);
+
+        rnp->products[reaction_index][1] =
+            sqlite3_column_int(get_reactions_stmt,6);
+
+        rnp->rates[reaction_index] =
+            sqlite3_column_double(get_reactions_stmt,7);
     }
 
 
