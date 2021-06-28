@@ -61,6 +61,7 @@ typedef struct dispatcher {
     SeedQueue *sq;
     int number_of_threads; // length of threads array
     pthread_t *threads;
+    bool *running;
     int step_cutoff; // step cutoff
     bool logging; // logging enabled
 

@@ -9,6 +9,7 @@ project(
 cc = meson.get_compiler('c')
 
 add_project_arguments('-Wno-unused-variable', language: 'c')
+add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
 if cc.get_id() == 'gcc'
   add_project_arguments('-Wno-unused-but-set-variable', language: 'c')

@@ -127,6 +127,7 @@ Dispatcher *new_dispatcher(
     dispatcher->hq = new_history_queue();
     dispatcher->sq = new_seed_queue(number_of_simulations, base_seed);
     dispatcher->number_of_threads = number_of_threads;
+    dispatcher->running = calloc(number_of_threads, sizeof(bool));
 
     dispatcher->threads = calloc(
         dispatcher->number_of_threads,
@@ -146,6 +147,7 @@ void free_dispatcher(Dispatcher *dispatcher) {
     free_history_queue(dispatcher->hq);
     free_seed_queue(dispatcher->sq);
     free(dispatcher->threads);
+    free(dispatcher->running);
     free(dispatcher);
 }
 
@@ -153,6 +155,9 @@ void free_dispatcher(Dispatcher *dispatcher) {
 void run_dispatcher(Dispatcher *dispatcher) {
     int i;
     SimulatorPayload *simulation;
+    SimulationHistory *simulation_history = NULL;
+    bool flag;
+
 
     for (i = 0; i < dispatcher->number_of_threads; i++) {
         simulation = new_simulator_payload(
@@ -167,21 +172,42 @@ void run_dispatcher(Dispatcher *dispatcher) {
             NULL,
             run_simulator,
             (void *)simulation);
+
+        dispatcher->running[i] = true;
     }
 
-    for (i = 0; i < dispatcher->number_of_threads; i++) {
-        pthread_join(dispatcher->threads[i],NULL);
-    }
+
+    while (true) {
+
+        int seed = get_simulation_history(
+            dispatcher->hq,
+            &simulation_history);
+
+        while (seed != -1) {
+
+            record_simulation_history(
+                dispatcher,
+                simulation_history, seed);
+
+            seed = get_simulation_history(
+                dispatcher->hq,
+                &simulation_history);
+        }
+
+        for (i = 0; i < dispatcher->number_of_threads; i++) {
+            if (pthread_tryjoin_np(dispatcher->threads[i],NULL) == 0)
+                dispatcher->running[i] = false;
+        }
+
+        flag = false;
+        for (i = 0; i < dispatcher->number_of_threads; i++) {
+            flag = flag || dispatcher->running[i];
+        }
+
+        if (! flag)
+            break;
 
 
-    SimulationHistory *simulation_history = NULL;
-
-    int seed = get_simulation_history(dispatcher->hq, &simulation_history);
-
-    while (seed != -1) {
-
-        record_simulation_history(dispatcher, simulation_history, seed);
-        seed = get_simulation_history(dispatcher->hq, &simulation_history);
     }
 }
 
