@@ -8,44 +8,74 @@ RNMC depends on [GSL](https://www.gnu.org/software/gsl/) for pseudo random numbe
 
 ### Building
 
-RNMC_native is built using meson and ninja:
+RNMC is built using meson and ninja:
+
 ```
 CC=clang meson setup --buildtype=debug build
 cd build
 ninja
-meson test
 ```
 
-### reaction_network_dir
+### Testing
 
-Inorder to remain indipendent of any particular language wrapper, RNMC ingests reaction networks from a series of files. A folder containing these files is the first argument to `RNMC`
-- `number_of_reactions`:
-- `number_of_species`:
-- `number_of_products`: number of products of each reaction
-- `products`: products of each reaction
-- `number_of_reactants`: number of reactants of each reaction
-- `reactants`: reactants of each reaction
-- `rates`: rates for each reaction
-- `initial_state`: initial state of the simulation.
-- `factor_zero`: rate modifier for reactions of the form (nothing) -> ...
-- `factor_two`: rate modifier for reactions of the form A + B -> ...
-- `factor_duplicate`: rate modifier for reactions of the form A + A -> ...
+Run the test using `test.sh` from the root directory of the repository.
 
-See `./test_materials/ronalds_network` for an example (thanks Ronald!)
+### Running
 
-Alternatively, the first 7 of these files can be wrapped up into a sqlite database with file name `rn.sqlite`. This is useful when dealing with reaction networks with hundreds of millions of reactions. An example is contained in `./test_materials/ronalds_network_db`. The reactions table has a column `reaction_string`. This column has an index which allows us to efficiently identify duplicate reactions. Because of this index, if the reaction table grows too big, insertions grind to a halt, so we shard the reactions table as demonstrated in the example database, which has shard size 20. In practice, you want to set shard size somewhere between 1 million and 5 million.
+RNMC is run as follows:
 
+```
+RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 --logging=false
+```
 
-### simulation_params
+- `database`: a sqlite database containing the reaction network, initial state and metadata. The simulation trajectories are also written into the database
+- `number_of_simulation`: an integer specifying how many simulations to run
+- `base_seed`: seeds used are `base_seed, base_seed+1, ..., base_seed+number_of_simulations-1`
+- `thread_count`: is how many threads to use.
+- `step_cutoff`: how many steps in each simulation
+- `logging`: whether to print logging info to stdout
 
-folder containing the following files:
+### The Reaction Network Database
 
-- `number_of_seeds`:
-- `number_of_threads`:
-- `seeds`: list of seeds. `0` is not considered a valid seed, and if a thread receives zero, it will terminate.
-- `time_cutoff`: how long to run the simulations (in simulation time)
-- `step_cutoff`: how many steps to run the simulation
+There should be 4 tales in the reaction network database:
+```
+    CREATE TABLE metadata (
+            number_of_species   INTEGER NOT NULL,
+            number_of_reactions INTEGER NOT NULL,
+            factor_zero         REAL NOT NULL,
+            factor_two          REAL NOT NULL,
+            factor_duplicate    REAL NOT NULL
+    );
+```
+the factors can be used to modify rates of reactions which have zero or two reactants, or have duplicate reactants.
 
-Note: Only one of `time_cutoff` or `step_cutoff` is needed. if `step_cutoff` is present, it will be used over `time_cutoff`
+```
+    CREATE TABLE reactions (
+            reaction_id         INTEGER NOT NULL PRIMARY KEY,
+            number_of_reactants INTEGER NOT NULL,
+            number_of_products  INTEGER NOT NULL,
+            reactant_1          INTEGER NOT NULL,
+            reactant_2          INTEGER NOT NULL,
+            product_1           INTEGER NOT NULL,
+            product_2           INTEGER NOT NULL,
+            rate                REAL NOT NULL
+    );
 
-See `./test_materials/simulation_params` for an example.
+```
+
+```
+    CREATE TABLE trajectories (
+            seed         INTEGER NOT NULL,
+            step         INTEGER NOT NULL,
+            reaction_id  INTEGER NOT NULL,
+            time         REAL NOT NULL
+    );
+```
+
+```
+    CREATE TABLE initial_state (
+            species_id             INTEGER NOT NULL PRIMARY KEY,
+            count                  INTEGER NOT NULL
+    );
+
+```
