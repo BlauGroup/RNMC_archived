@@ -11,7 +11,7 @@ sql='SELECT seed, step, reaction_id FROM trajectories ORDER BY seed ASC, step AS
 sqlite3 ./test_materials/rn_with_trajectories.sqlite "${sql}" > ./test_materials/trajectories
 sqlite3 ./test_materials/rn_copy.sqlite "${sql}" > ./test_materials/copy_trajectories
 
-if  cmp ./test_materials/trajectories ./test_materials/copy_trajectories; then
+if  cmp ./test_materials/trajectories ./test_materials/copy_trajectories > /dev/null; then
     echo -e "${Green} passed: no difference in trajectories ${Color_Off}"
 else
     echo -e "${Red} failed: difference in trajectories ${Color_Off}"
