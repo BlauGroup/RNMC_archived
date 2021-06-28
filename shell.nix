@@ -11,7 +11,6 @@ mkShell rec {
                   ninja
                   sqlite
                   sqlitebrowser
-                  sqldiff
                 ];
 
   # currently, clangd is not well wrapped in nixos.
