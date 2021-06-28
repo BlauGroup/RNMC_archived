@@ -2,43 +2,43 @@
 
 SeedQueue *new_seed_queue(int number_of_seeds, unsigned int base_seed) {
 
-  SeedQueue *sqp = malloc(sizeof(SeedQueue));
-  unsigned int *seeds = malloc(sizeof(unsigned int) * number_of_seeds);
+    SeedQueue *seed_queue = calloc(1,sizeof(SeedQueue));
+    unsigned int *seeds = calloc(number_of_seeds, sizeof(unsigned int));
 
   for (unsigned int i = 0; i < number_of_seeds; i++) {
       seeds[i] = base_seed + i;
   }
 
-  sqp->seeds = seeds;
-  sqp->number_of_seeds = number_of_seeds;
-  sqp->next_seed = 0;
-  pthread_mutex_init(&sqp->mtx,NULL);
-  return sqp;
+  seed_queue->seeds = seeds;
+  seed_queue->number_of_seeds = number_of_seeds;
+  seed_queue->next_seed = 0;
+  pthread_mutex_init(&seed_queue->mutex,NULL);
+  return seed_queue;
 }
 
-void free_seed_queue(SeedQueue *sqp) {
-  free(sqp->seeds);
-  pthread_mutex_destroy(&sqp->mtx);
-  free(sqp);
+void free_seed_queue(SeedQueue *seed_queue) {
+  free(seed_queue->seeds);
+  pthread_mutex_destroy(&seed_queue->mutex);
+  free(seed_queue);
 }
 
-unsigned long int get_seed(SeedQueue *sqp) {
-  pthread_mutex_lock(&sqp->mtx);
+unsigned long int get_seed(SeedQueue *seed_queue) {
+  pthread_mutex_lock(&seed_queue->mutex);
   unsigned long int seed;
-  if (sqp->next_seed < sqp->number_of_seeds) {
-    seed = sqp->seeds[sqp->next_seed];
-    sqp->next_seed++;
+  if (seed_queue->next_seed < seed_queue->number_of_seeds) {
+    seed = seed_queue->seeds[seed_queue->next_seed];
+    seed_queue->next_seed++;
   }
   else
     seed = 0;
 
-  pthread_mutex_unlock(&sqp->mtx);
+  pthread_mutex_unlock(&seed_queue->mutex);
   return seed;
 }
 
 
 HistoryNode *new_history_node(SimulationHistory *simulation_history, int seed) {
-    HistoryNode *history_node = malloc(sizeof(HistoryNode));
+    HistoryNode *history_node = calloc(1,sizeof(HistoryNode));
     history_node->seed = seed;
     history_node->simulation_history = simulation_history;
     history_node->next = NULL;
@@ -51,14 +51,14 @@ void free_history_node(HistoryNode *history_node) {
 }
 
 HistoryQueue *new_history_queue() {
-    HistoryQueue *history_queue = malloc(sizeof(HistoryQueue));
-    pthread_mutex_init(&history_queue->mtx, NULL);
+    HistoryQueue *history_queue = calloc(1,sizeof(HistoryQueue));
+    pthread_mutex_init(&history_queue->mutex, NULL);
     history_queue->history_node = NULL;
     return history_queue;
 }
 
 void free_history_queue(HistoryQueue *history_queue) {
-    pthread_mutex_destroy(&history_queue->mtx);
+    pthread_mutex_destroy(&history_queue->mutex);
     free(history_queue);
 }
 
@@ -68,18 +68,18 @@ void insert_simulation_history(
     int seed
     ) {
 
-    pthread_mutex_lock(&history_queue->mtx);
+    pthread_mutex_lock(&history_queue->mutex);
     HistoryNode *history_node = new_history_node(simulation_history, seed);
     history_node->next = history_queue->history_node;
     history_queue->history_node = history_node;
-    pthread_mutex_unlock(&history_queue->mtx);
+    pthread_mutex_unlock(&history_queue->mutex);
 }
 
 int get_simulation_history(
     HistoryQueue *history_queue,
     SimulationHistory **simulation_history) {
 
-    pthread_mutex_lock(&history_queue->mtx);
+    pthread_mutex_lock(&history_queue->mutex);
     int seed = - 1;
     HistoryNode *history_node = history_queue->history_node;
 
@@ -91,7 +91,7 @@ int get_simulation_history(
         free_history_node(history_node);
     }
 
-    pthread_mutex_unlock(&history_queue->mtx);
+    pthread_mutex_unlock(&history_queue->mutex);
     return seed;
 
 }
@@ -108,7 +108,7 @@ Dispatcher *new_dispatcher(
     bool logging) {
 
 
-    Dispatcher *dispatcher = malloc(sizeof(Dispatcher));
+    Dispatcher *dispatcher = calloc(1,sizeof(Dispatcher));
     sqlite3_open(database_file, &dispatcher->db);
 
     int rc = sqlite3_prepare_v2(
@@ -128,9 +128,10 @@ Dispatcher *new_dispatcher(
     dispatcher->sq = new_seed_queue(number_of_simulations, base_seed);
     dispatcher->number_of_threads = number_of_threads;
 
-    dispatcher->threads = malloc(
-        sizeof(pthread_t) *
-        dispatcher->number_of_threads);
+    dispatcher->threads = calloc(
+        dispatcher->number_of_threads,
+        sizeof(pthread_t)
+        );
 
     dispatcher->logging = logging;
     dispatcher->step_cutoff = step_cutoff;
@@ -239,7 +240,7 @@ SimulatorPayload *new_simulator_payload(
     int step_cutoff
     ) {
 
-    SimulatorPayload *spp = malloc(sizeof(SimulatorPayload));
+    SimulatorPayload *spp = calloc(1, sizeof(SimulatorPayload));
     spp->rn = rn;
     spp->hq = hq;
     spp->type = type;

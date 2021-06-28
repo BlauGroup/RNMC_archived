@@ -36,27 +36,27 @@ SolveLinear *new_solve_linear(unsigned long int seed,
                             int number_of_reactions,
                             double *initial_propensities) {
 
-  SolveLinear *p = malloc(sizeof(SolveLinear));
-  p->update = &update_solve_linear;
-  p->update_many = &update_many_solve_linear;
-  p->event = &event_solve_linear;
-  p->get_propensity = &get_propensity_solve_linear;
-  p->get_propensity_sum = &get_propensity_sum_solve_linear;
-  p->get_number_of_active_reactions = &get_number_of_active_reactions_solve_linear;
-  p->type = linear;
-  p->sampler = new_sampler(seed);
-  p->number_of_reactions = number_of_reactions;
-  p->number_of_active_reactions = 0;
-  p->propensities = malloc(sizeof(double) * number_of_reactions);
-  p->propensity_sum = 0.0;
+    SolveLinear *p = calloc(1, sizeof(SolveLinear));
+    p->update = &update_solve_linear;
+    p->update_many = &update_many_solve_linear;
+    p->event = &event_solve_linear;
+    p->get_propensity = &get_propensity_solve_linear;
+    p->get_propensity_sum = &get_propensity_sum_solve_linear;
+    p->get_number_of_active_reactions = &get_number_of_active_reactions_solve_linear;
+    p->type = linear;
+    p->sampler = new_sampler(seed);
+    p->number_of_reactions = number_of_reactions;
+    p->number_of_active_reactions = 0;
+    p->propensities = calloc(number_of_reactions, sizeof(double));
+    p->propensity_sum = 0.0;
 
-  for (int i = 0; i < number_of_reactions; i++) {
-    if (initial_propensities[i] > 0.0) p->number_of_active_reactions++;
-    p->propensities[i] = initial_propensities[i];
-    p->propensity_sum += initial_propensities[i];
-  }
+    for (int i = 0; i < number_of_reactions; i++) {
+        if (initial_propensities[i] > 0.0) p->number_of_active_reactions++;
+        p->propensities[i] = initial_propensities[i];
+        p->propensity_sum += initial_propensities[i];
+    }
 
-  return p;
+    return p;
 }
 
 void free_solve_linear(SolveLinear *p){
@@ -135,43 +135,43 @@ SolveTree *new_solve_tree(unsigned long int seed,
                           int number_of_reactions,
                           double *initial_propensities) {
 
-  SolveTree *p = malloc(sizeof(SolveTree));
-  p->update = &update_solve_tree;
-  p->update_many = &update_many_solve_tree;
-  p->event = &event_solve_tree;
-  p->get_propensity = &get_propensity_solve_tree;
-  p->get_propensity_sum = &get_propensity_sum_solve_tree;
-  p->get_number_of_active_reactions = &get_number_of_active_reactions_solve_tree;
-  p->type = tree;
-  p->sampler = new_sampler(seed);
-  p->number_of_reactions = number_of_reactions;
-  p->number_of_active_reactions = 0;
+    SolveTree *p = calloc(1, sizeof(SolveTree));
+    p->update = &update_solve_tree;
+    p->update_many = &update_many_solve_tree;
+    p->event = &event_solve_tree;
+    p->get_propensity = &get_propensity_solve_tree;
+    p->get_propensity_sum = &get_propensity_sum_solve_tree;
+    p->get_number_of_active_reactions = &get_number_of_active_reactions_solve_tree;
+    p->type = tree;
+    p->sampler = new_sampler(seed);
+    p->number_of_reactions = number_of_reactions;
+    p->number_of_active_reactions = 0;
 
-  int m = 0; // tree depth
-  int pow2 = 1;  // power of 2 >= numberOfReactions
+    int m = 0; // tree depth
+    int pow2 = 1;  // power of 2 >= numberOfReactions
 
-  while (pow2 < number_of_reactions) {
-    pow2 *= 2;
-    m++;
-  }
+    while (pow2 < number_of_reactions) {
+        pow2 *= 2;
+        m++;
+    }
 
-  p->number_of_tree_nodes = 2 * pow2 - 1;
-  p->propensity_offset = pow2 - 1;
-  p->tree = malloc(p->number_of_tree_nodes * sizeof(double));
+    p->number_of_tree_nodes = 2 * pow2 - 1;
+    p->propensity_offset = pow2 - 1;
+    p->tree = calloc(p->number_of_tree_nodes, sizeof(double));
 
-  // initialize tree
-  for (int i = 0; i < p->number_of_tree_nodes; i++) p->tree[i] = 0.0;
-  for (int i = p->propensity_offset;
-       i < p->propensity_offset + number_of_reactions;
-       i++) {
-    p->tree[i] = initial_propensities[i - p->propensity_offset];
-  }
-  p->propensity_sum = 0.0;
+    // initialize tree
+    for (int i = 0; i < p->number_of_tree_nodes; i++) p->tree[i] = 0.0;
+    for (int i = p->propensity_offset;
+         i < p->propensity_offset + number_of_reactions;
+         i++) {
+        p->tree[i] = initial_propensities[i - p->propensity_offset];
+    }
+    p->propensity_sum = 0.0;
 
-  // finish initializing the tree
-  // set propensitySum
-  // compute number of active reactions
-  sum_solve_tree(p);
+    // finish initializing the tree
+    // set propensitySum
+    // compute number of active reactions
+    sum_solve_tree(p);
 
 
   return p;

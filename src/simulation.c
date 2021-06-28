@@ -1,24 +1,24 @@
 #include "simulation.h"
 
 Chunk *new_chunk() {
-  Chunk *chunkp = malloc(sizeof(Chunk));
-  int i;
-  for (i = 0; i < CHUNK_SIZE; i++) {
-    chunkp->data[i].reaction = -1;
-    chunkp->data[i].time = 0.0;
-  }
-  chunkp->next_free_index = 0;
-  chunkp->next_chunk = NULL;
-  return chunkp;
+    Chunk *chunkp = calloc(1, sizeof(Chunk));
+    int i;
+    for (i = 0; i < CHUNK_SIZE; i++) {
+        chunkp->data[i].reaction = -1;
+        chunkp->data[i].time = 0.0;
+    }
+    chunkp->next_free_index = 0;
+    chunkp->next_chunk = NULL;
+    return chunkp;
 }
 
 SimulationHistory *new_simulation_history() {
-  SimulationHistory *simulation_historyp = malloc(sizeof(SimulationHistory));
-  Chunk *chunkp = new_chunk();
-  simulation_historyp->first_chunk = chunkp;
-  simulation_historyp->last_chunk = chunkp;
+    SimulationHistory *simulation_historyp = calloc(1, sizeof(SimulationHistory));
+    Chunk *chunkp = new_chunk();
+    simulation_historyp->first_chunk = chunkp;
+    simulation_historyp->last_chunk = chunkp;
 
-  return simulation_historyp;
+    return simulation_historyp;
 }
 
 void free_simulation_history(SimulationHistory *simulation_historyp) {
@@ -68,10 +68,10 @@ Simulation *new_simulation(ReactionNetwork *rnp,
   int i;
 
 
-  Simulation *sp = malloc(sizeof(Simulation));
+  Simulation *sp = calloc(1, sizeof(Simulation));
   sp->rn = rnp;
   sp->seed = seed;
-  sp->state = malloc(sizeof(int) * rnp->number_of_species);
+  sp->state = calloc(rnp->number_of_species, sizeof(int));
 
   for (i = 0; i < rnp->number_of_species; i++)
     sp->state[i] = rnp->initial_state[i];

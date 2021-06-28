@@ -25,7 +25,7 @@ char sql_get_reactions[] =
 
 
 ReactionNetwork *new_reaction_network(sqlite3 *database) {
-    ReactionNetwork *rnp = malloc(sizeof(ReactionNetwork));
+    ReactionNetwork *rnp = calloc(1, sizeof(ReactionNetwork));
 
 
     sqlite3_stmt *get_metadata_stmt;
@@ -55,27 +55,27 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
 
 
     // allocate number of reactants array
-    rnp->number_of_reactants = malloc(sizeof(int) * rnp->number_of_reactions);
+    rnp->number_of_reactants = calloc(rnp->number_of_reactions, sizeof(int));
 
     // allocate reactant array
-    int *reactants_values = malloc(sizeof(int) * 2 * rnp->number_of_reactions);
-    rnp->reactants = malloc(sizeof(int *) * rnp->number_of_reactions);
+    int *reactants_values = calloc(2 * rnp->number_of_reactions, sizeof(int));
+    rnp->reactants = calloc(rnp->number_of_reactions, sizeof(int *));
     for (i = 0; i < rnp->number_of_reactions; i++) {
       rnp->reactants[i] = reactants_values + 2 * i;
     }
 
     // allocate number of products array
-    rnp->number_of_products = malloc(sizeof(int) * rnp->number_of_reactions);
+    rnp->number_of_products = calloc(rnp->number_of_reactions, sizeof(int));
 
     // allocate products array
-    int *products_values = malloc(sizeof(int) * 2 * rnp->number_of_reactions);
-    rnp->products = malloc(sizeof(int *) * rnp->number_of_reactions);
+    int *products_values = calloc(2 * rnp->number_of_reactions, sizeof(int));
+    rnp->products = calloc(rnp->number_of_reactions, sizeof(int *));
     for (i = 0; i < rnp->number_of_reactions; i++) {
       rnp->products[i] = products_values + 2 * i;
     }
 
     //allocate rates array
-    rnp->rates = malloc(sizeof(double) * rnp->number_of_reactions);
+    rnp->rates = calloc(rnp->number_of_reactions, sizeof(double));
 
 
     rc = sqlite3_prepare_v2(
@@ -114,7 +114,7 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
 
 
     // allocate initial state
-    rnp->initial_state = malloc(sizeof(int) * rnp->number_of_species);
+    rnp->initial_state = calloc(rnp->number_of_species, sizeof(int));
 
     rc = sqlite3_prepare_v2(
         database, sql_get_initial_state, -1, &get_initial_state_stmt, NULL);
@@ -205,8 +205,10 @@ void compute_dependency_node(ReactionNetwork *rnp, int index) {
     }
 
     node->number_of_dependents = number_of_dependents_count;
-    node->dependents = malloc(sizeof(int)
-                            * number_of_dependents_count);
+    node->dependents = calloc(
+        number_of_dependents_count,
+        sizeof(int));
+
     int dependents_counter = 0;
     int current_reaction = 0;
     while (dependents_counter < number_of_dependents_count) {
@@ -236,8 +238,10 @@ void initialize_dependency_graph(ReactionNetwork *rnp) {
 
 
     int i; // reaction index
-    rnp->dependency_graph = malloc(sizeof(DependentsNode)
-                                 * rnp->number_of_reactions);
+    rnp->dependency_graph = calloc(
+        rnp->number_of_reactions,
+        sizeof(DependentsNode)
+        );
 
     for (i = 0; i < rnp->number_of_reactions; i++) {
         initialize_dependents_node(rnp->dependency_graph + i);
@@ -287,7 +291,7 @@ double compute_propensity(ReactionNetwork *rnp,
 }
 
 void initialize_propensities(ReactionNetwork *rnp) {
-    rnp->initial_propensities = malloc(rnp->number_of_reactions * sizeof(double));
+    rnp->initial_propensities = calloc(rnp->number_of_reactions, sizeof(double));
     for (int reaction = 0; reaction < rnp->number_of_reactions; reaction++) {
         rnp->initial_propensities[reaction] =
             compute_propensity(rnp, rnp->initial_state, reaction);

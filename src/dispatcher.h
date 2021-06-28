@@ -12,12 +12,12 @@ typedef struct seedQueue {
     unsigned int *seeds;
     int number_of_seeds; // length of seeds array
     int next_seed; // index into seeds array
-    pthread_mutex_t mtx;
+    pthread_mutex_t mutex;
 } SeedQueue;
 
 SeedQueue *new_seed_queue(int number_of_seeds, unsigned int base_seed);
-void free_seed_queue(SeedQueue *sqp);
-unsigned long int get_seed(SeedQueue *sqp);
+void free_seed_queue(SeedQueue *seed_queue);
+unsigned long int get_seed(SeedQueue *seed_queue);
 
 
 typedef struct historyNode {
@@ -30,12 +30,12 @@ HistoryNode *new_history_node(SimulationHistory *simulation_history, int seed);
 
 // simulation history shouldn't be freed here.
 // will be freed by dispatcher
-void free_history_node(HistoryNode *hnp);
+void free_history_node(HistoryNode *history_node);
 
 // emptry if history_node == NULL
 typedef struct historyQueue {
     HistoryNode *history_node;
-    pthread_mutex_t mtx;
+    pthread_mutex_t mutex;
 } HistoryQueue;
 
 HistoryQueue *new_history_queue();
