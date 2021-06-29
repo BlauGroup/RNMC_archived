@@ -109,23 +109,23 @@ Dispatcher *new_dispatcher(
 
 
     Dispatcher *dispatcher = calloc(1,sizeof(Dispatcher));
-    sqlite3_open(database_file, &dispatcher->db);
+    sqlite3_open(database_file, &dispatcher->database);
 
     int rc = sqlite3_prepare_v2(
-        dispatcher->db,
+        dispatcher->database,
         sql_insert_trajectory,
         -1,
         &dispatcher->insert_trajectory_stmt,
         NULL);
 
     if (rc != SQLITE_OK) {
-        printf("new_dispatcher error %s\n", sqlite3_errmsg(dispatcher->db));
+        printf("new_dispatcher error %s\n", sqlite3_errmsg(dispatcher->database));
         return NULL;
     }
 
-    dispatcher->rn = new_reaction_network(dispatcher->db);
-    dispatcher->hq = new_history_queue();
-    dispatcher->sq = new_seed_queue(number_of_simulations, base_seed);
+    dispatcher->reaction_network = new_reaction_network(dispatcher->database);
+    dispatcher->history_queue = new_history_queue();
+    dispatcher->seed_queue = new_seed_queue(number_of_simulations, base_seed);
     dispatcher->number_of_threads = number_of_threads;
     dispatcher->running = calloc(number_of_threads, sizeof(bool));
 
@@ -142,10 +142,10 @@ Dispatcher *new_dispatcher(
 
 void free_dispatcher(Dispatcher *dispatcher) {
     sqlite3_finalize(dispatcher->insert_trajectory_stmt);
-    sqlite3_close(dispatcher->db);
-    free_reaction_network(dispatcher->rn);
-    free_history_queue(dispatcher->hq);
-    free_seed_queue(dispatcher->sq);
+    sqlite3_close(dispatcher->database);
+    free_reaction_network(dispatcher->reaction_network);
+    free_history_queue(dispatcher->history_queue);
+    free_seed_queue(dispatcher->seed_queue);
     free(dispatcher->threads);
     free(dispatcher->running);
     free(dispatcher);
@@ -177,10 +177,10 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
     for (i = 0; i < dispatcher->number_of_threads; i++) {
         simulation = new_simulator_payload(
-            dispatcher->rn,
-            dispatcher->hq,
+            dispatcher->reaction_network,
+            dispatcher->history_queue,
             tree,
-            dispatcher->sq,
+            dispatcher->seed_queue,
             dispatcher->step_cutoff);
 
         pthread_create(
@@ -196,7 +196,7 @@ void run_dispatcher(Dispatcher *dispatcher) {
     while (true) {
 
         int seed = get_simulation_history(
-            dispatcher->hq,
+            dispatcher->history_queue,
             &simulation_history);
 
         while (seed != -1) {
@@ -208,7 +208,7 @@ void run_dispatcher(Dispatcher *dispatcher) {
                 simulation_history, seed);
 
             seed = get_simulation_history(
-                dispatcher->hq,
+                dispatcher->history_queue,
                 &simulation_history);
         }
 
@@ -241,7 +241,7 @@ void record_simulation_history(
     int rc;
     Chunk *chunk = simulation_history->first_chunk;
 
-    sqlite3_exec(dispatcher->db, "BEGIN", 0, 0, 0);
+    sqlite3_exec(dispatcher->database, "BEGIN", 0, 0, 0);
 
     while (chunk) {
         for (i = 0; i < chunk->next_free_index; i++) {
@@ -261,15 +261,15 @@ void record_simulation_history(
             count += 1;
 
             if (count % TRANSACTION_SIZE == 0) {
-                sqlite3_exec(dispatcher->db, "COMMIT", 0, 0, 0);
-                sqlite3_exec(dispatcher->db, "BEGIN", 0, 0, 0);
+                sqlite3_exec(dispatcher->database, "COMMIT", 0, 0, 0);
+                sqlite3_exec(dispatcher->database, "BEGIN", 0, 0, 0);
             }
 
         }
         chunk = chunk->next_chunk;
     }
 
-    sqlite3_exec(dispatcher->db, "COMMIT", 0, 0, 0);
+    sqlite3_exec(dispatcher->database, "COMMIT", 0, 0, 0);
 
     // free simulation history once we have inserted it into the db
     free_simulation_history(simulation_history);

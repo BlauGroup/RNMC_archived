@@ -55,11 +55,11 @@ int get_simulation_history(
     SimulationHistory **simulation_history);
 
 typedef struct dispatcher {
-    sqlite3 *db;
+    sqlite3 *database;
     sqlite3_stmt *insert_trajectory_stmt;
-    ReactionNetwork *rn;
-    HistoryQueue *hq;
-    SeedQueue *sq;
+    ReactionNetwork *reaction_network;
+    HistoryQueue *history_queue;
+    SeedQueue *seed_queue;
     int number_of_threads; // length of threads array
     pthread_t *threads;
     bool *running;
