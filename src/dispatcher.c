@@ -278,18 +278,18 @@ void record_simulation_history(
 
 
 SimulatorPayload *new_simulator_payload(
-    ReactionNetwork *rn,
-    HistoryQueue *hq,
+    ReactionNetwork *reaction_network,
+    HistoryQueue *history_queue,
     SolveType type,
-    SeedQueue *sq,
+    SeedQueue *seed_queue,
     int step_cutoff
     ) {
 
     SimulatorPayload *spp = calloc(1, sizeof(SimulatorPayload));
-    spp->rn = rn;
-    spp->hq = hq;
+    spp->reaction_network = reaction_network;
+    spp->history_queue = history_queue;
     spp->type = type;
-    spp->sq = sq;
+    spp->seed_queue = seed_queue;
     spp->step_cutoff = step_cutoff;
     return spp;
 }
@@ -300,17 +300,25 @@ void free_simulator_payload(SimulatorPayload *sp) {
     free(sp);
 }
 
-void *run_simulator(void *simulator_payload) {
-    SimulatorPayload *sp = (SimulatorPayload *) simulator_payload;
-    unsigned long int seed = get_seed(sp->sq);
+void *run_simulator(void *sp) {
+    SimulatorPayload *simulator_payload = (SimulatorPayload *) sp;
+    unsigned long int seed = get_seed(simulator_payload->seed_queue);
     while (seed > 0) {
-        Simulation *simulation = new_simulation(sp->rn, seed, sp->type);
+        Simulation *simulation = new_simulation(
+            simulator_payload->reaction_network,
+            seed,
+            simulator_payload->type);
 
-        run_for(simulation, sp->step_cutoff);
+        run_for(simulation, simulator_payload->step_cutoff);
 
-        insert_simulation_history(sp->hq, simulation->history, seed);
+        insert_simulation_history(
+            simulator_payload->history_queue,
+            simulation->history,
+            seed);
+
+
         free_simulation(simulation);
-        seed = get_seed(sp->sq);
+        seed = get_seed(simulator_payload->seed_queue);
     }
 
     free_simulator_payload(sp);

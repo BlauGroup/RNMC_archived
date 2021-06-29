@@ -90,18 +90,18 @@ void record_simulation_history(
 
 
 typedef struct simulatorPayload {
-    ReactionNetwork *rn;
-    HistoryQueue *hq;
+    ReactionNetwork *reaction_network;
+    HistoryQueue *history_queue;
     SolveType type;
-    SeedQueue *sq;
+    SeedQueue *seed_queue;
     int step_cutoff;
 } SimulatorPayload;
 
 SimulatorPayload *new_simulator_payload(
-    ReactionNetwork *rn,
-    HistoryQueue *hq,
+    ReactionNetwork *reaction_network,
+    HistoryQueue *history_queue,
     SolveType type,
-    SeedQueue *sq,
+    SeedQueue *seed_queue,
     int step_cutoff
     );
 

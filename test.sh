@@ -13,10 +13,13 @@ sqlite3 ./test_materials/rn_copy.sqlite "${sql}" > ./test_materials/copy_traject
 
 if  cmp ./test_materials/trajectories ./test_materials/copy_trajectories > /dev/null; then
     echo -e "${Green} passed: no difference in trajectories ${Color_Off}"
+    RC=0
 else
     echo -e "${Red} failed: difference in trajectories ${Color_Off}"
+    RC=1
 fi
 
 rm ./test_materials/rn_copy.sqlite
 rm ./test_materials/trajectories
 rm ./test_materials/copy_trajectories
+exit $RC
