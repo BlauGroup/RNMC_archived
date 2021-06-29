@@ -33,10 +33,10 @@ typedef struct simulationHistory {
 SimulationHistory *new_simulation_history();
 void free_simulation_history(SimulationHistory *simulation_historyp);
 void insert_history_element(SimulationHistory *simulation_historyp, int reaction, double time);
-int simulation_history_length(SimulationHistory *shp);
+int simulation_history_length(SimulationHistory *simulation_history);
 
 typedef struct simulation {
-  ReactionNetwork *rn;
+  ReactionNetwork *reaction_network;
   unsigned long int seed;
   int *state;
   double time;

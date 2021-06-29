@@ -34,20 +34,23 @@ void free_simulation_history(SimulationHistory *simulation_historyp) {
   free(simulation_historyp);
 }
 
-void insert_history_element(SimulationHistory *simulation_historyp, int reaction, double time) {
+void insert_history_element(
+    SimulationHistory *simulation_history,
+    int reaction,
+    double time) {
 
-  Chunk *last_chunkp = simulation_historyp->last_chunk;
-  if (last_chunkp->next_free_index == CHUNK_SIZE) {
-    Chunk *new_chunkp = new_chunk();
-    last_chunkp->next_chunk = new_chunkp;
-    simulation_historyp->last_chunk = new_chunkp;
-    new_chunkp->data[0].reaction = reaction;
-    new_chunkp->data[0].time = time;
-    new_chunkp->next_free_index++;
-  } else {
-    last_chunkp->data[last_chunkp->next_free_index].reaction = reaction;
-    last_chunkp->data[last_chunkp->next_free_index].time = time;
-    last_chunkp->next_free_index++;
+    Chunk *last_chunk = simulation_history->last_chunk;
+    if (last_chunk->next_free_index == CHUNK_SIZE) {
+        Chunk *new_chunkp = new_chunk();
+        last_chunk->next_chunk = new_chunkp;
+        simulation_history->last_chunk = new_chunkp;
+        new_chunkp->data[0].reaction = reaction;
+        new_chunkp->data[0].time = time;
+        new_chunkp->next_free_index++;
+    } else {
+        last_chunk->data[last_chunk->next_free_index].reaction = reaction;
+        last_chunk->data[last_chunk->next_free_index].time = time;
+        last_chunk->next_free_index++;
   }
 }
 
@@ -62,30 +65,30 @@ int simulation_history_length(SimulationHistory *shp) {
 }
 
 
-Simulation *new_simulation(ReactionNetwork *rnp,
+Simulation *new_simulation(ReactionNetwork *reaction_network,
                            unsigned long int seed,
                            SolveType type) {
   int i;
 
 
-  Simulation *sp = calloc(1, sizeof(Simulation));
-  sp->rn = rnp;
-  sp->seed = seed;
-  sp->state = calloc(rnp->number_of_species, sizeof(int));
+  Simulation *simulation = calloc(1, sizeof(Simulation));
+  simulation->reaction_network = reaction_network;
+  simulation->seed = seed;
+  simulation->state = calloc(reaction_network->number_of_species, sizeof(int));
 
-  for (i = 0; i < rnp->number_of_species; i++)
-    sp->state[i] = rnp->initial_state[i];
+  for (i = 0; i < reaction_network->number_of_species; i++)
+    simulation->state[i] = reaction_network->initial_state[i];
 
-  sp->time = 0.0;
-  sp->step = 0;
-  sp->solver = new_solve(type,
+  simulation->time = 0.0;
+  simulation->step = 0;
+  simulation->solver = new_solve(type,
                          seed,
-                         rnp->number_of_reactions,
-                         rnp->initial_propensities);
+                         reaction_network->number_of_reactions,
+                         reaction_network->initial_propensities);
 
-  sp->history = new_simulation_history();
+  simulation->history = new_simulation_history();
 
-  return sp;
+  return simulation;
 }
 
 void free_simulation(Simulation *simulation) {
@@ -118,20 +121,30 @@ bool step(Simulation *simulation) {
         simulation->time);
 
     // update state
-    for (m = 0; m < simulation->rn->number_of_reactants[next_reaction]; m++)
-      simulation->state[simulation->rn->reactants[next_reaction][m]]--;
-    for (m = 0; m < simulation->rn->number_of_products[next_reaction]; m++)
-      simulation->state[simulation->rn->products[next_reaction][m]]++;
+    for (m = 0;
+         m < simulation->reaction_network->number_of_reactants[next_reaction];
+         m++)
+
+      simulation->state[simulation->reaction_network->reactants[next_reaction][m]]--;
+
+    for (m = 0;
+         m < simulation->reaction_network->number_of_products[next_reaction];
+         m++)
+
+      simulation->state[simulation->reaction_network->products[next_reaction][m]]++;
 
     // update propensities
-    DependentsNode *dnp = get_dependency_node(simulation->rn, next_reaction);
+    DependentsNode *dnp = get_dependency_node(
+        simulation->reaction_network,
+        next_reaction);
+
     int number_of_updates = dnp->number_of_dependents;
     int *dependents = dnp->dependents;
 
     for (m = 0; m < number_of_updates; m++) {
       reaction_index = dependents[m];
       new_propensity = compute_propensity(
-          simulation->rn,
+          simulation->reaction_network,
           simulation->state,
           reaction_index);
 
@@ -156,10 +169,10 @@ void run_for(Simulation *simulation, int step_cutoff) {
   }
 }
 
-bool check_state_positivity(Simulation *sp) {
+bool check_state_positivity(Simulation *simulation) {
   int i;
-  for (i = 0; i < sp->rn->number_of_species; i++) {
-    if (sp->state[i] < 0) {
+  for (i = 0; i < simulation->reaction_network->number_of_species; i++) {
+    if (simulation->state[i] < 0) {
       puts("negative state encountered!!!");
       return false;
     }
