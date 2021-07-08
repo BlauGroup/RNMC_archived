@@ -50,7 +50,7 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
     rnp->number_of_reactions = sqlite3_column_int(get_metadata_stmt, 1);
     rnp->factor_zero = sqlite3_column_double(get_metadata_stmt, 2);
     rnp->factor_two = sqlite3_column_double(get_metadata_stmt, 3);
-    rnp->factor_two = sqlite3_column_double(get_metadata_stmt, 4);
+    rnp->factor_duplicate = sqlite3_column_double(get_metadata_stmt, 4);
 
 
 
