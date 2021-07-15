@@ -33,7 +33,6 @@ RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread
 - `base_seed`: seeds used are `base_seed, base_seed+1, ..., base_seed+number_of_simulations-1`
 - `thread_count`: is how many threads to use.
 - `step_cutoff`: how many steps in each simulation
-- `logging`: whether to print logging info to stdout
 
 ### The Reaction Network Database
 
