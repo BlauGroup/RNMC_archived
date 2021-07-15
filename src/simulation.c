@@ -13,12 +13,12 @@ Chunk *new_chunk() {
 }
 
 SimulationHistory *new_simulation_history() {
-    SimulationHistory *simulation_historyp = calloc(1, sizeof(SimulationHistory));
-    Chunk *chunkp = new_chunk();
-    simulation_historyp->first_chunk = chunkp;
-    simulation_historyp->last_chunk = chunkp;
+    SimulationHistory *simulation_history = calloc(1, sizeof(SimulationHistory));
+    Chunk *chunk = new_chunk();
+    simulation_history->first_chunk = chunk;
+    simulation_history->last_chunk = chunk;
 
-    return simulation_historyp;
+    return simulation_history;
 }
 
 void free_simulation_history(SimulationHistory *simulation_history) {
@@ -41,12 +41,12 @@ void insert_history_element(
 
     Chunk *last_chunk = simulation_history->last_chunk;
     if (last_chunk->next_free_index == CHUNK_SIZE) {
-        Chunk *new_chunkp = new_chunk();
-        last_chunk->next_chunk = new_chunkp;
-        simulation_history->last_chunk = new_chunkp;
-        new_chunkp->data[0].reaction = reaction;
-        new_chunkp->data[0].time = time;
-        new_chunkp->next_free_index++;
+        Chunk *next_chunk = new_chunk();
+        last_chunk->next_chunk = next_chunk;
+        simulation_history->last_chunk = next_chunk;
+        next_chunk->data[0].reaction = reaction;
+        next_chunk->data[0].time = time;
+        next_chunk->next_free_index++;
     } else {
         last_chunk->data[last_chunk->next_free_index].reaction = reaction;
         last_chunk->data[last_chunk->next_free_index].time = time;
@@ -54,9 +54,9 @@ void insert_history_element(
   }
 }
 
-int simulation_history_length(SimulationHistory *shp) {
+int simulation_history_length(SimulationHistory *simulation_history) {
   int length = 0;
-  Chunk *chunk = shp->first_chunk;
+  Chunk *chunk = simulation_history->first_chunk;
   while (chunk) {
     length += chunk->next_free_index;
     chunk = chunk->next_chunk;
