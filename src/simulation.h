@@ -31,8 +31,8 @@ typedef struct simulationHistory {
 
 
 SimulationHistory *new_simulation_history();
-void free_simulation_history(SimulationHistory *simulation_historyp);
-void insert_history_element(SimulationHistory *simulation_historyp, int reaction, double time);
+void free_simulation_history(SimulationHistory *simulation_history);
+void insert_history_element(SimulationHistory *simulation_history, int reaction, double time);
 int simulation_history_length(SimulationHistory *simulation_history);
 
 typedef struct simulation {
@@ -45,16 +45,16 @@ typedef struct simulation {
   SimulationHistory *history;
 } Simulation;
 
-Simulation *new_simulation(ReactionNetwork *rnp,
+Simulation *new_simulation(ReactionNetwork *reaction_network,
                            unsigned long int seed,
                            SolveType type);
 
 // the simulation history is passed to the dispatcher
 // don't free it when freeing the simulation state
-void free_simulation(Simulation *sp);
+void free_simulation(Simulation *simulation);
 
-bool step(Simulation *sp);
-void run_for(Simulation *sp, int step_cutoff);
-bool check_state_positivity(Simulation *sp);
+bool step(Simulation *simulation);
+void run_for(Simulation *simulation, int step_cutoff);
+bool check_state_positivity(Simulation *simulation);
 
 #endif

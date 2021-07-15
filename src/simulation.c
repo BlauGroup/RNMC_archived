@@ -21,17 +21,17 @@ SimulationHistory *new_simulation_history() {
     return simulation_historyp;
 }
 
-void free_simulation_history(SimulationHistory *simulation_historyp) {
-  Chunk *chunkp = simulation_historyp->first_chunk;
-  Chunk *next_chunkp;
+void free_simulation_history(SimulationHistory *simulation_history) {
+  Chunk *chunk = simulation_history->first_chunk;
+  Chunk *next_chunk;
 
-  while (chunkp) {
-    next_chunkp = chunkp->next_chunk;
-    free(chunkp);
-    chunkp = next_chunkp;
+  while (chunk) {
+    next_chunk = chunk->next_chunk;
+    free(chunk);
+    chunk = next_chunk;
   }
 
-  free(simulation_historyp);
+  free(simulation_history);
 }
 
 void insert_history_element(
