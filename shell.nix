@@ -14,11 +14,11 @@ mkShell rec {
   # currently, clangd is not well wrapped in nixos.
   # setting CPATH explicitly as follows lets clangd find system headers
 
-  # CPATH = builtins.concatStringsSep ":" [
-  #   "${glibc.dev}/include"
-  #   "${llvmPackages.clang-unwrapped.lib}/lib/clang/7.1.0/include"
-  #   "${sqlite.dev}/include"
-  #   "${gsl}/include"
-  # ];
+  CPATH = builtins.concatStringsSep ":" [
+    "${glibc.dev}/include"
+    "${llvmPackages.clang-unwrapped.lib}/lib/clang/7.1.0/include"
+    "${sqlite.dev}/include"
+    "${gsl}/include"
+  ];
 
 }
