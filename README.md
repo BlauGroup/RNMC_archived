@@ -21,7 +21,7 @@ cd $HOME
 wget https://www.sqlite.org/2021/sqlite-amalgamation-3360000.zip
 unzip sqlite-amalgamation-3360000.zip
 cd sqlite-amalgamation-3360000
-gcc -o libsqlite3.so.0 -shared -fPIC sqlite3.c -lpthread -ldl
+gcc -o libsqlite3.so -shared -fPIC sqlite3.c -lpthread -ldl
 ```
 
 in which case `RNMC` can be built like this:
