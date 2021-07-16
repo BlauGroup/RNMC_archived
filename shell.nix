@@ -12,7 +12,6 @@ mkShell rec {
                 ];
 
   # currently, clangd is not well wrapped in nixos.
-  # symbolic link compile_commands.json into root dir
   # this lets clangd find all project headers
   # setting CPATH explicitly as follows lets clangd find system headers
 
