@@ -4,16 +4,32 @@ RNMC is a program for simulating reaction networks heavily inspired by [SPPARKS]
 
 ### Dependencies
 
-RNMC depends on [GSL](https://www.gnu.org/software/gsl/) for pseudo random number generation and [sqlite](https://www.sqlite.org/index.html) for the database interface. Make sure that `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` are set appropriately if you aren't using versions bundled with your system.
+RNMC depends on [GSL](https://www.gnu.org/software/gsl/) for pseudo random number generation and [sqlite](https://www.sqlite.org/index.html) for the database interface.
 
 ### Building
 
-RNMC is built using meson and ninja:
+On a machine with system versions of GSL and sqlite, the `RNMC` executable can be built like this:
 
 ```
-CC=clang meson setup --buildtype=debug build
-cd build
-ninja
+CC=gcc ./build.sh
+```
+
+If you are on a cluster, dependencies might not be present in which case it is worthwhile building them. For example, sqlite can be built as follows:
+
+```
+cd $HOME
+wget https://www.sqlite.org/2021/sqlite-amalgamation-3360000.zip
+unzip sqlite-amalgamation-3360000.zip
+cd sqlite-amalgamation-3360000
+gcc -o libsqlite3.so.0 -shared -fPIC sqlite3.c -lpthread -ldl
+```
+
+in which case `RNMC` can be built like this:
+
+```
+export CPATH=$HOME/sqlite-amalgamation-3360000:$CPATH
+export LIBRARY_PATH=$HOME/sqlite-amalgamation-3360000:$LIBRARY_PATH
+CC=gcc ./build.sh
 ```
 
 ### Testing
