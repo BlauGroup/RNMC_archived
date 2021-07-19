@@ -106,7 +106,7 @@ SimulatorPayload *new_simulator_payload(
     SolveType type,
     SeedQueue *seed_queue,
     int step_cutoff,
-    bool *running;
+    bool *running
     );
 
 void free_simulator_payload(SimulatorPayload *simulator_payload);
