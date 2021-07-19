@@ -62,7 +62,7 @@ typedef struct dispatcher {
     SeedQueue *seed_queue;
     int number_of_threads; // length of threads array
     pthread_t *threads;
-    bool *running;
+    bool *running;   // array of bools indicating which threads are still running
     int step_cutoff; // step cutoff
     bool logging; // logging enabled
 
@@ -95,6 +95,9 @@ typedef struct simulatorPayload {
     SolveType type;
     SeedQueue *seed_queue;
     int step_cutoff;
+    // pointer to a bool shared with dispatcher
+    // so it can query if we are still running
+    bool *running;
 } SimulatorPayload;
 
 SimulatorPayload *new_simulator_payload(
@@ -102,7 +105,8 @@ SimulatorPayload *new_simulator_payload(
     HistoryQueue *history_queue,
     SolveType type,
     SeedQueue *seed_queue,
-    int step_cutoff
+    int step_cutoff,
+    bool *running;
     );
 
 void free_simulator_payload(SimulatorPayload *simulator_payload);

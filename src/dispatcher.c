@@ -181,7 +181,9 @@ void run_dispatcher(Dispatcher *dispatcher) {
             dispatcher->history_queue,
             tree,
             dispatcher->seed_queue,
-            dispatcher->step_cutoff);
+            dispatcher->step_cutoff,
+            dispatcher->running + i
+            );
 
         pthread_create(
             dispatcher->threads + i,
@@ -210,12 +212,6 @@ void run_dispatcher(Dispatcher *dispatcher) {
             seed = get_simulation_history(
                 dispatcher->history_queue,
                 &simulation_history);
-        }
-
-        for (i = 0; i < dispatcher->number_of_threads; i++) {
-            if (dispatcher->running[i])
-                if (pthread_tryjoin_np(dispatcher->threads[i],NULL) == 0)
-                    dispatcher->running[i] = false;
         }
 
         flag = false;
@@ -282,22 +278,24 @@ SimulatorPayload *new_simulator_payload(
     HistoryQueue *history_queue,
     SolveType type,
     SeedQueue *seed_queue,
-    int step_cutoff
+    int step_cutoff,
+    bool *running
     ) {
 
-    SimulatorPayload *spp = calloc(1, sizeof(SimulatorPayload));
-    spp->reaction_network = reaction_network;
-    spp->history_queue = history_queue;
-    spp->type = type;
-    spp->seed_queue = seed_queue;
-    spp->step_cutoff = step_cutoff;
-    return spp;
+    SimulatorPayload *simulator_payload = calloc(1, sizeof(SimulatorPayload));
+    simulator_payload->reaction_network = reaction_network;
+    simulator_payload->history_queue = history_queue;
+    simulator_payload->type = type;
+    simulator_payload->seed_queue = seed_queue;
+    simulator_payload->step_cutoff = step_cutoff;
+    simulator_payload->running = running;
+    return simulator_payload;
 }
 
-void free_simulator_payload(SimulatorPayload *sp) {
+void free_simulator_payload(SimulatorPayload *simulator_payload) {
     // reaction network, seed queue and history queue
     // get freed as part of the dispatcher
-    free(sp);
+    free(simulator_payload);
 }
 
 void *run_simulator(void *sp) {
@@ -321,6 +319,10 @@ void *run_simulator(void *sp) {
         seed = get_seed(simulator_payload->seed_queue);
     }
 
-    free_simulator_payload(sp);
+    // tell the dispatcher that we are finished
+    *simulator_payload->running = false;
+
+
+    free_simulator_payload(simulator_payload);
     pthread_exit(NULL);
 }
