@@ -1,14 +1,14 @@
 with (import <nixpkgs> {});
 
 mkShell rec {
-  buildInputs = [ clang
-                  gcc
+  buildInputs = [ gcc
                   gsl
-                  lldb
-                  gdb
-                  valgrind
                   sqlite
-                  sqlitebrowser
+                  # lldb
+                  # gdb
+                  # valgrind
+                  # clang
+                  # sqlitebrowser
                 ];
 
   # currently, clangd is not well wrapped in nixos.
