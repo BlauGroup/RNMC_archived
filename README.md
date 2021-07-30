@@ -14,7 +14,7 @@ On a machine with system versions of GSL and sqlite, the `RNMC` executable can b
 CC=gcc ./build.sh
 ```
 
-If you are on a cluster and sqlite is not present, it can be built as follows:
+Note that the build script uses the `gsl-config` utility to find headers and libraries for GSL. If you are on a cluster and sqlite is not present, it can be built as follows:
 
 ```
 cd $HOME
