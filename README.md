@@ -1,6 +1,6 @@
 # RNMC
 
-RNMC is a program for simulating reaction networks heavily inspired by [SPPARKS](https://spparks.sandia.gov/). RNMC is designed to run large numbers of simulations of a fixed system (fixed reaction network and fixed initial state) in parallel.
+RNMC is a program for simulating reaction networks heavily inspired by [SPPARKS](https://spparks.sandia.gov/). RNMC is designed to run large numbers of simulations of a fixed system (fixed reaction network and fixed initial state) in parallel. Unlike SPPARKS, RNMC can simulate densely connected reaction networks because it computes the reaction dependency graph dynamically and it is shared between all simulation threads.
 
 ### Dependencies
 
