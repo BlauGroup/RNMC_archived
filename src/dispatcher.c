@@ -99,6 +99,11 @@ int get_simulation_history(
 char sql_insert_trajectory[] =
     "INSERT INTO trajectories VALUES (?1, ?2, ?3, ?4);";
 
+char sql_remove_duplicate_trajectories[] =
+    "DELETE FROM trajectories WHERE rowid NOT IN"
+    "(SELECT MIN(rowid) FROM trajectories GROUP BY seed, step);";
+
+
 Dispatcher *new_dispatcher(
     char *database_file,
     int number_of_simulations,
@@ -168,6 +173,8 @@ void dispatcher_log(Dispatcher *dispatcher, int seed) {
     }
 }
 
+
+
 void run_dispatcher(Dispatcher *dispatcher) {
     int i;
     SimulatorPayload *simulation;
@@ -224,6 +231,12 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
 
     }
+
+    puts("removing duplicate trajectories...");
+    // we don't check if simulations already exist in the database.
+    // That would be mad slow. Instead, we scan for duplicates
+    // and remove them at the very end.
+    sqlite3_exec(dispatcher->database, sql_remove_duplicate_trajectories, 0, 0, 0);
 }
 
 void record_simulation_history(
