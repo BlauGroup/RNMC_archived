@@ -14,7 +14,7 @@ On a machine with system versions of GSL and sqlite, the `RNMC` executable can b
 CC=gcc ./build.sh
 ```
 
-If you are on a cluster, dependencies might not be present in which case it is worthwhile building them. For example, sqlite can be built as follows:
+If you are on a cluster and sqlite is not present, it can be built as follows:
 
 ```
 cd $HOME
