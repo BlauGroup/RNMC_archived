@@ -156,7 +156,7 @@ void free_dispatcher(Dispatcher *dispatcher) {
     free(dispatcher);
 }
 
-void dispatcher_log(Dispatcher *dispatcher, int seed) {
+void dispatcher_log(Dispatcher *dispatcher, char *message) {
     if (dispatcher->logging)
     {
         time_t rawtime;
@@ -165,11 +165,11 @@ void dispatcher_log(Dispatcher *dispatcher, int seed) {
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
         printf(
-            "[%02d:%02d:%02d] writing trajectory %d to database\n",
+            "[%02d:%02d:%02d] %s",
             timeinfo->tm_hour,
             timeinfo->tm_min,
             timeinfo->tm_sec,
-            seed);
+            message);
     }
 }
 
@@ -180,6 +180,7 @@ void run_dispatcher(Dispatcher *dispatcher) {
     SimulatorPayload *simulation;
     SimulationHistory *simulation_history = NULL;
     bool flag;
+    char log_buffer[256];
 
 
     for (i = 0; i < dispatcher->number_of_threads; i++) {
@@ -210,7 +211,8 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
         while (seed != -1) {
 
-            dispatcher_log(dispatcher, seed);
+            sprintf(log_buffer, "writing trajectory %d to database\n", seed);
+            dispatcher_log(dispatcher, log_buffer);
 
             record_simulation_history(
                 dispatcher,

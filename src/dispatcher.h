@@ -79,7 +79,7 @@ Dispatcher *new_dispatcher(
 void free_dispatcher(Dispatcher *dispatcher);
 void run_dispatcher(Dispatcher *dispatcher);
 
-void dispatcher_log(Dispatcher *dispatcher, int seed);
+void dispatcher_log(Dispatcher *dispatcher, char *message);
 
 #define TRANSACTION_SIZE 10000
 
