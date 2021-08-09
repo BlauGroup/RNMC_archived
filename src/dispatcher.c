@@ -165,7 +165,7 @@ void dispatcher_log(Dispatcher *dispatcher, int seed) {
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
         printf(
-            "[%d:%d:%d] writing trajectory %d to database\n",
+            "[%02d:%02d:%02d] writing trajectory %d to database\n",
             timeinfo->tm_hour,
             timeinfo->tm_min,
             timeinfo->tm_sec,
