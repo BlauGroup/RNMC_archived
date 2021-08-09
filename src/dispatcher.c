@@ -234,7 +234,7 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
     }
 
-    puts("removing duplicate trajectories...");
+    dispatcher_log(dispatcher, "removing duplicate trajectories...\n");
     // we don't check if simulations already exist in the database.
     // That would be mad slow. Instead, we scan for duplicates
     // and remove them at the very end.
