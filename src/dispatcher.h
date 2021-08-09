@@ -79,7 +79,11 @@ Dispatcher *new_dispatcher(
 void free_dispatcher(Dispatcher *dispatcher);
 void run_dispatcher(Dispatcher *dispatcher);
 
+// if you want to pass a format string to dispatcher_log, first
+// evaluate it into a buffer using sprintf and then pass that buffer
+// to dispatcher_log
 void dispatcher_log(Dispatcher *dispatcher, char *message);
+
 
 #define TRANSACTION_SIZE 10000
 
