@@ -134,12 +134,12 @@ bool step(Simulation *simulation) {
       simulation->state[simulation->reaction_network->products[next_reaction][m]]++;
 
     // update propensities
-    DependentsNode *dnp = get_dependency_node(
+    DependentsNode *dependents_node = get_dependency_node(
         simulation->reaction_network,
         next_reaction);
 
-    int number_of_updates = dnp->number_of_dependents;
-    int *dependents = dnp->dependents;
+    int number_of_updates = dependents_node->number_of_dependents;
+    int *dependents = dependents_node->dependents;
 
     for (m = 0; m < number_of_updates; m++) {
       reaction_index = dependents[m];
