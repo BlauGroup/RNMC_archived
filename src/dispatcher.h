@@ -65,6 +65,8 @@ typedef struct dispatcher {
     bool *running;   // array of bools indicating which threads are still running
     int step_cutoff; // step cutoff
     bool logging; // logging enabled
+    long int start_time;
+    long int gc_interval;
 
 } Dispatcher;
 
@@ -74,6 +76,7 @@ Dispatcher *new_dispatcher(
     int base_seed,
     int number_of_threads,
     int step_cutoff,
+    long int gc_interval,
     bool logging);
 
 void free_dispatcher(Dispatcher *dispatcher);

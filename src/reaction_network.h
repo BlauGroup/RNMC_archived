@@ -12,7 +12,7 @@ typedef struct dependentsNode {
     int number_of_dependents; // number of reactions that depend on current reaction.
     // number_of_dependents is set to -1 if reaction hasn't been encountered before
     int *dependents; // reactions which depend on current reaction.
-    // dependents is set to NULL if reaction hasn't been encountered before
+    // dependents is set to NULL if dependents need to be computed.
     pthread_mutex_t mutex; // mutex needed because simulation thread initialize dependents
     int number_of_occurrences; // number of times the reaction has occoured.
 } DependentsNode;
@@ -52,11 +52,17 @@ typedef struct reactionNetwork {
 } ReactionNetwork;
 
 ReactionNetwork *new_reaction_network(sqlite3 *database);
-void free_reaction_network(ReactionNetwork *rnp);
+void free_reaction_network(ReactionNetwork *reaction_network);
 
-DependentsNode *get_dependency_node(ReactionNetwork *rnp, int index);
-void compute_dependency_node(ReactionNetwork *rnp, int reaction);
-void initialize_dependency_graph(ReactionNetwork *rnp);
+DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index);
+
+// expensive operation where we loop through the dependency graph and free
+// dependency nodes which have been used only once
+int garbage_collect_dependency_graph(ReactionNetwork *reaction_network);
+
+
+void compute_dependency_node(ReactionNetwork *reaction_network, int reaction);
+void initialize_dependency_graph(ReactionNetwork *reaction_network);
 
 
 double compute_propensity(ReactionNetwork *rnp, int *state, int reaction);

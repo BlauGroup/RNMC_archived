@@ -110,6 +110,7 @@ Dispatcher *new_dispatcher(
     int base_seed,
     int number_of_threads,
     int step_cutoff,
+    long int gc_interval,
     bool logging) {
 
 
@@ -141,6 +142,8 @@ Dispatcher *new_dispatcher(
 
     dispatcher->logging = logging;
     dispatcher->step_cutoff = step_cutoff;
+    dispatcher->start_time = time(NULL);
+    dispatcher->gc_interval = gc_interval;
 
     return dispatcher;
 }
@@ -181,6 +184,9 @@ void run_dispatcher(Dispatcher *dispatcher) {
     SimulationHistory *simulation_history = NULL;
     bool flag;
     char log_buffer[256];
+    long int time_since_start;
+    long int previous_time_since_start;
+    int seed;
 
 
     for (i = 0; i < dispatcher->number_of_threads; i++) {
@@ -205,11 +211,34 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
     while (true) {
 
+
         int seed = get_simulation_history(
             dispatcher->history_queue,
             &simulation_history);
 
+        long int previous_time_since_start = time(0) - dispatcher->start_time;
+
         while (seed != -1) {
+
+            time_since_start = time(0) - dispatcher->start_time;
+
+            if ( time_since_start != previous_time_since_start &&
+                 time_since_start % dispatcher->gc_interval == 0) {
+
+                previous_time_since_start = time_since_start;
+
+                int number_of_nodes_freed =
+                    garbage_collect_dependency_graph(dispatcher->reaction_network);
+
+                sprintf(
+                    log_buffer,
+                    "garbage collected %d nodes\n",
+                    number_of_nodes_freed);
+
+                dispatcher_log(dispatcher, log_buffer);
+
+
+            }
 
             sprintf(log_buffer, "writing trajectory %d to database\n", seed);
             dispatcher_log(dispatcher, log_buffer);

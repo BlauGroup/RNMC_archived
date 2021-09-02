@@ -26,7 +26,7 @@ char sql_get_reactions[] =
 
 
 ReactionNetwork *new_reaction_network(sqlite3 *database) {
-    ReactionNetwork *rnp = calloc(1, sizeof(ReactionNetwork));
+    ReactionNetwork *reaction_network = calloc(1, sizeof(ReactionNetwork));
 
 
     sqlite3_stmt *get_metadata_stmt;
@@ -47,36 +47,47 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
 
     // filling in metadata
     sqlite3_step(get_metadata_stmt);
-    rnp->number_of_species = sqlite3_column_int(get_metadata_stmt, 0);
-    rnp->number_of_reactions = sqlite3_column_int(get_metadata_stmt, 1);
-    rnp->factor_zero = sqlite3_column_double(get_metadata_stmt, 2);
-    rnp->factor_two = sqlite3_column_double(get_metadata_stmt, 3);
-    rnp->factor_duplicate = sqlite3_column_double(get_metadata_stmt, 4);
+    reaction_network->number_of_species = sqlite3_column_int(get_metadata_stmt, 0);
+    reaction_network->number_of_reactions = sqlite3_column_int(get_metadata_stmt, 1);
+    reaction_network->factor_zero = sqlite3_column_double(get_metadata_stmt, 2);
+    reaction_network->factor_two = sqlite3_column_double(get_metadata_stmt, 3);
+    reaction_network->factor_duplicate = sqlite3_column_double(get_metadata_stmt, 4);
 
 
 
     // allocate number of reactants array
-    rnp->number_of_reactants = calloc(rnp->number_of_reactions, sizeof(int));
+    reaction_network->number_of_reactants = calloc(
+        reaction_network->number_of_reactions, sizeof(int));
 
     // allocate reactant array
-    int *reactants_values = calloc(2 * rnp->number_of_reactions, sizeof(int));
-    rnp->reactants = calloc(rnp->number_of_reactions, sizeof(int *));
-    for (i = 0; i < rnp->number_of_reactions; i++) {
-      rnp->reactants[i] = reactants_values + 2 * i;
+    int *reactants_values = calloc(
+        2 * reaction_network->number_of_reactions, sizeof(int));
+
+    reaction_network->reactants = calloc(
+        reaction_network->number_of_reactions, sizeof(int *));
+
+    for (i = 0; i < reaction_network->number_of_reactions; i++) {
+      reaction_network->reactants[i] = reactants_values + 2 * i;
     }
 
     // allocate number of products array
-    rnp->number_of_products = calloc(rnp->number_of_reactions, sizeof(int));
+    reaction_network->number_of_products = calloc(
+        reaction_network->number_of_reactions, sizeof(int));
 
     // allocate products array
-    int *products_values = calloc(2 * rnp->number_of_reactions, sizeof(int));
-    rnp->products = calloc(rnp->number_of_reactions, sizeof(int *));
-    for (i = 0; i < rnp->number_of_reactions; i++) {
-      rnp->products[i] = products_values + 2 * i;
+    int *products_values = calloc(
+        2 * reaction_network->number_of_reactions, sizeof(int));
+
+    reaction_network->products = calloc(
+        reaction_network->number_of_reactions, sizeof(int *));
+
+    for (i = 0; i < reaction_network->number_of_reactions; i++) {
+      reaction_network->products[i] = products_values + 2 * i;
     }
 
     //allocate rates array
-    rnp->rates = calloc(rnp->number_of_reactions, sizeof(double));
+    reaction_network->rates = calloc(
+        reaction_network->number_of_reactions, sizeof(double));
 
 
     rc = sqlite3_prepare_v2(
@@ -87,35 +98,36 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
     }
 
     // reading reactions from db
-    for (i = 0; i < rnp->number_of_reactions; i++) {
+    for (i = 0; i < reaction_network->number_of_reactions; i++) {
         sqlite3_step(get_reactions_stmt);
         reaction_index = sqlite3_column_int(get_reactions_stmt,0);
 
-        rnp->number_of_reactants[reaction_index] =
+        reaction_network->number_of_reactants[reaction_index] =
             sqlite3_column_int(get_reactions_stmt,1);
 
-        rnp->number_of_products[reaction_index] =
+        reaction_network->number_of_products[reaction_index] =
             sqlite3_column_int(get_reactions_stmt,2);
 
-        rnp->reactants[reaction_index][0] =
+        reaction_network->reactants[reaction_index][0] =
             sqlite3_column_int(get_reactions_stmt,3);
 
-        rnp->reactants[reaction_index][1] =
+        reaction_network->reactants[reaction_index][1] =
             sqlite3_column_int(get_reactions_stmt,4);
 
-        rnp->products[reaction_index][0] =
+        reaction_network->products[reaction_index][0] =
             sqlite3_column_int(get_reactions_stmt,5);
 
-        rnp->products[reaction_index][1] =
+        reaction_network->products[reaction_index][1] =
             sqlite3_column_int(get_reactions_stmt,6);
 
-        rnp->rates[reaction_index] =
+        reaction_network->rates[reaction_index] =
             sqlite3_column_double(get_reactions_stmt,7);
     }
 
 
     // allocate initial state
-    rnp->initial_state = calloc(rnp->number_of_species, sizeof(int));
+    reaction_network->initial_state = calloc(
+        reaction_network->number_of_species, sizeof(int));
 
     rc = sqlite3_prepare_v2(
         database, sql_get_initial_state, -1, &get_initial_state_stmt, NULL);
@@ -125,81 +137,107 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
     }
 
     // fill initial state
-    for (i = 0; i < rnp->number_of_species; i++) {
+    for (i = 0; i < reaction_network->number_of_species; i++) {
         sqlite3_step(get_initial_state_stmt);
         species_index = sqlite3_column_int(get_initial_state_stmt,0);
-        rnp->initial_state[species_index] =
+        reaction_network->initial_state[species_index] =
             sqlite3_column_int(get_initial_state_stmt,1);
     }
 
 
-    initialize_dependency_graph(rnp);
-    initialize_propensities(rnp);
+    initialize_dependency_graph(reaction_network);
+    initialize_propensities(reaction_network);
 
 
 
     sqlite3_finalize(get_metadata_stmt);
     sqlite3_finalize(get_reactions_stmt);
     sqlite3_finalize(get_initial_state_stmt);
-    return rnp;
+    return reaction_network;
 
 }
 
 
-void free_reaction_network(ReactionNetwork *rnp) {
-    free(rnp->number_of_reactants);
-    free(rnp->reactants[0]);
-    free(rnp->reactants);
-    free(rnp->number_of_products);
-    free(rnp->products[0]);
-    free(rnp->products);
-    free(rnp->rates);
-    free(rnp->initial_state);
-    free(rnp->initial_propensities);
+void free_reaction_network(ReactionNetwork *reaction_network) {
+    free(reaction_network->number_of_reactants);
+    free(reaction_network->reactants[0]);
+    free(reaction_network->reactants);
+    free(reaction_network->number_of_products);
+    free(reaction_network->products[0]);
+    free(reaction_network->products);
+    free(reaction_network->rates);
+    free(reaction_network->initial_state);
+    free(reaction_network->initial_propensities);
 
     int i; // reaction index
-    for (i = 0; i < rnp->number_of_reactions; i++)
-        free_dependents_node(rnp->dependency_graph + i);
+    for (i = 0; i < reaction_network->number_of_reactions; i++)
+        free_dependents_node(reaction_network->dependency_graph + i);
 
-    free(rnp->dependency_graph);
+    free(reaction_network->dependency_graph);
 
-    free(rnp);
+    free(reaction_network);
 
 }
 
-DependentsNode *get_dependency_node(ReactionNetwork *rnp, int index) {
-    DependentsNode *node = rnp->dependency_graph + index;
+DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index) {
+    DependentsNode *node = reaction_network->dependency_graph + index;
 
     pthread_mutex_lock(&node->mutex);
 
     node->number_of_occurrences++;
 
     if (! node->dependents)
-        compute_dependency_node(rnp, index);
+        compute_dependency_node(reaction_network, index);
 
     pthread_mutex_unlock(&node->mutex);
     return node;
 }
 
-void compute_dependency_node(ReactionNetwork *rnp, int index) {
 
-    DependentsNode *node = rnp->dependency_graph + index;
+int garbage_collect_dependency_graph(ReactionNetwork *reaction_network) {
+
+    int number_of_frees = 0;
+    int reaction;
+    for (reaction = 0; reaction < reaction_network->number_of_reactions; reaction++) {
+        DependentsNode *node = reaction_network->dependency_graph + reaction;
+
+
+        if (node->number_of_occurrences > 0 &&
+            node->number_of_occurrences < 2) {
+
+            pthread_mutex_lock(&node->mutex);
+            free(node->dependents);
+            node->dependents = NULL;
+            number_of_frees++;
+            pthread_mutex_unlock(&node->mutex);
+        }
+
+    }
+
+    return number_of_frees;
+}
+
+void compute_dependency_node(ReactionNetwork *reaction_network, int index) {
+
+    DependentsNode *node = reaction_network->dependency_graph + index;
 
     int number_of_dependents_count = 0;
     int j; // reaction index
     int l, m, n; // reactant and product indices
 
-    for (j = 0; j < rnp->number_of_reactions; j++) {
+    for (j = 0; j < reaction_network->number_of_reactions; j++) {
         bool flag = false;
 
-        for (l = 0; l < rnp->number_of_reactants[j]; l++) {
-            for (m = 0; m < rnp->number_of_reactants[index]; m++) {
-                if (rnp->reactants[j][l] == rnp->reactants[index][m])
+        for (l = 0; l < reaction_network->number_of_reactants[j]; l++) {
+            for (m = 0; m < reaction_network->number_of_reactants[index]; m++) {
+                if (reaction_network->reactants[j][l] ==
+                    reaction_network->reactants[index][m])
                     flag = true;
             }
 
-            for (n = 0; n < rnp->number_of_products[index]; n++) {
-                if (rnp->reactants[j][l] == rnp->products[index][n])
+            for (n = 0; n < reaction_network->number_of_products[index]; n++) {
+                if (reaction_network->reactants[j][l] ==
+                    reaction_network->products[index][n])
                     flag = true;
             }
         }
@@ -217,14 +255,18 @@ void compute_dependency_node(ReactionNetwork *rnp, int index) {
     int current_reaction = 0;
     while (dependents_counter < number_of_dependents_count) {
         bool flag = false;
-        for (l = 0; l < rnp->number_of_reactants[current_reaction]; l++) {
-            for (m = 0; m < rnp->number_of_reactants[index]; m++) {
-                if (rnp->reactants[current_reaction][l] == rnp->reactants[index][m])
+        for (l = 0;
+             l < reaction_network->number_of_reactants[current_reaction];
+             l++) {
+            for (m = 0; m < reaction_network->number_of_reactants[index]; m++) {
+                if (reaction_network->reactants[current_reaction][l] ==
+                    reaction_network->reactants[index][m])
                     flag = true;
             }
 
-            for (n = 0; n < rnp->number_of_products[index]; n++) {
-                if (rnp->reactants[current_reaction][l] == rnp->products[index][n])
+            for (n = 0; n < reaction_network->number_of_products[index]; n++) {
+                if (reaction_network->reactants[current_reaction][l] ==
+                    reaction_network->products[index][n])
                     flag = true;
             }
         }
@@ -238,17 +280,17 @@ void compute_dependency_node(ReactionNetwork *rnp, int index) {
 
 }
 
-void initialize_dependency_graph(ReactionNetwork *rnp) {
+void initialize_dependency_graph(ReactionNetwork *reaction_network) {
 
 
     int i; // reaction index
-    rnp->dependency_graph = calloc(
-        rnp->number_of_reactions,
+    reaction_network->dependency_graph = calloc(
+        reaction_network->number_of_reactions,
         sizeof(DependentsNode)
         );
 
-    for (i = 0; i < rnp->number_of_reactions; i++) {
-        initialize_dependents_node(rnp->dependency_graph + i);
+    for (i = 0; i < reaction_network->number_of_reactions; i++) {
+        initialize_dependents_node(reaction_network->dependency_graph + i);
     }
 
     // this is how you would precompute the dependency graph.
@@ -259,45 +301,50 @@ void initialize_dependency_graph(ReactionNetwork *rnp) {
 
 }
 
-double compute_propensity(ReactionNetwork *rnp,
+double compute_propensity(ReactionNetwork *reaction_network,
                          int *state,
                          int reaction) {
     double p;
     // zero reactants
-    if (rnp->number_of_reactants[reaction] == 0)
-        p = rnp->factor_zero
-            * rnp->rates[reaction];
+    if (reaction_network->number_of_reactants[reaction] == 0)
+        p = reaction_network->factor_zero
+            * reaction_network->rates[reaction];
 
     // one reactant
-    else if (rnp->number_of_reactants[reaction] == 1)
-        p = state[rnp->reactants[reaction][0]]
-            * rnp->rates[reaction];
+    else if (reaction_network->number_of_reactants[reaction] == 1)
+        p = state[reaction_network->reactants[reaction][0]]
+            * reaction_network->rates[reaction];
 
 
     // two reactants
     else {
-        if (rnp->reactants[reaction][0] == rnp->reactants[reaction][1])
-            p = rnp->factor_duplicate
-                * rnp->factor_two
-                * state[rnp->reactants[reaction][0]]
-                * (state[rnp->reactants[reaction][0]] - 1)
-                * rnp->rates[reaction];
+        if (reaction_network->reactants[reaction][0] ==
+            reaction_network->reactants[reaction][1])
+            p = reaction_network->factor_duplicate
+                * reaction_network->factor_two
+                * state[reaction_network->reactants[reaction][0]]
+                * (state[reaction_network->reactants[reaction][0]] - 1)
+                * reaction_network->rates[reaction];
 
         else
-            p = rnp->factor_two
-                * state[rnp->reactants[reaction][0]]
-                * state[rnp->reactants[reaction][1]]
-                * rnp->rates[reaction];
+            p = reaction_network->factor_two
+                * state[reaction_network->reactants[reaction][0]]
+                * state[reaction_network->reactants[reaction][1]]
+                * reaction_network->rates[reaction];
 
     }
 
     return p;
 }
 
-void initialize_propensities(ReactionNetwork *rnp) {
-    rnp->initial_propensities = calloc(rnp->number_of_reactions, sizeof(double));
-    for (int reaction = 0; reaction < rnp->number_of_reactions; reaction++) {
-        rnp->initial_propensities[reaction] =
-            compute_propensity(rnp, rnp->initial_state, reaction);
+void initialize_propensities(ReactionNetwork *reaction_network) {
+    reaction_network->initial_propensities = calloc(
+        reaction_network->number_of_reactions, sizeof(double));
+    for (int reaction = 0;
+         reaction < reaction_network->number_of_reactions;
+         reaction++) {
+        reaction_network->initial_propensities[reaction] =
+            compute_propensity(reaction_network,
+                               reaction_network->initial_state, reaction);
     }
 }
