@@ -9,11 +9,12 @@
 
 
 typedef struct dependentsNode {
-  int number_of_dependents; // number of reactions that depend on current reaction.
-  // number_of_dependents is set to -1 if reaction hasn't been encountered before
-  int *dependents; // reactions which depend on current reaction.
-  // dependents is set to NULL if reaction hasn't been encountered before
-  pthread_mutex_t mutex; // mutex needed because simulation thread initialize dependents
+    int number_of_dependents; // number of reactions that depend on current reaction.
+    // number_of_dependents is set to -1 if reaction hasn't been encountered before
+    int *dependents; // reactions which depend on current reaction.
+    // dependents is set to NULL if reaction hasn't been encountered before
+    pthread_mutex_t mutex; // mutex needed because simulation thread initialize dependents
+    int number_of_occurrences; // number of times the reaction has occoured.
 } DependentsNode;
 
 // struct for storing the static reaction network state which

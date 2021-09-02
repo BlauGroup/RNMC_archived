@@ -1,9 +1,10 @@
 #include "reaction_network.h"
 
 void initialize_dependents_node(DependentsNode *dependents_node) {
-  dependents_node->number_of_dependents = -1;
-  dependents_node->dependents = NULL;
-  pthread_mutex_init(&dependents_node->mutex, NULL);
+    dependents_node->number_of_dependents = -1;
+    dependents_node->dependents = NULL;
+    dependents_node->number_of_occurrences = 0;
+    pthread_mutex_init(&dependents_node->mutex, NULL);
 }
 
 void free_dependents_node(DependentsNode *dependents_node) {
@@ -170,6 +171,9 @@ DependentsNode *get_dependency_node(ReactionNetwork *rnp, int index) {
     DependentsNode *node = rnp->dependency_graph + index;
 
     pthread_mutex_lock(&node->mutex);
+
+    node->number_of_occurrences++;
+
     if (! node->dependents)
         compute_dependency_node(rnp, index);
 
