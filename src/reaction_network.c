@@ -194,7 +194,9 @@ DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index
 }
 
 
-int garbage_collect_dependency_graph(ReactionNetwork *reaction_network) {
+int garbage_collect_dependency_graph(
+    ReactionNetwork *reaction_network,
+    int gc_threshold) {
 
     int number_of_frees = 0;
     int reaction;
@@ -203,7 +205,7 @@ int garbage_collect_dependency_graph(ReactionNetwork *reaction_network) {
 
 
         if (node->number_of_occurrences > 0 &&
-            node->number_of_occurrences < 2) {
+            node->number_of_occurrences < gc_threshold) {
 
             pthread_mutex_lock(&node->mutex);
             free(node->dependents);

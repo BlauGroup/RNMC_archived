@@ -58,7 +58,9 @@ DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index
 
 // expensive operation where we loop through the dependency graph and free
 // dependency nodes which have been used only once
-int garbage_collect_dependency_graph(ReactionNetwork *reaction_network);
+int garbage_collect_dependency_graph(
+    ReactionNetwork *reaction_network,
+    int gc_threshold);
 
 
 void compute_dependency_node(ReactionNetwork *reaction_network, int reaction);

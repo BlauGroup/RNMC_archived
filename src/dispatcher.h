@@ -67,6 +67,7 @@ typedef struct dispatcher {
     bool logging; // logging enabled
     long int start_time;
     long int gc_interval;
+    int gc_threshold;
 
 } Dispatcher;
 
@@ -77,6 +78,7 @@ Dispatcher *new_dispatcher(
     int number_of_threads,
     int step_cutoff,
     long int gc_interval,
+    int gc_threshold,
     bool logging);
 
 void free_dispatcher(Dispatcher *dispatcher);

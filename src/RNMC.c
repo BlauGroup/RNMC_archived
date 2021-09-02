@@ -17,19 +17,20 @@ void print_usage() {
 
 int main(int argc, char **argv) {
 
-    if (argc != 7) {
+    if (argc != 8) {
         print_usage();
         exit(EXIT_FAILURE);
     }
 
 
     struct option long_options[] = {
-        {"database", required_argument, NULL, 'd'},
-        {"number_of_simulations", required_argument, NULL, 'n'},
-        {"base_seed", required_argument, NULL, 'b'},
-        {"thread_count", required_argument, NULL, 't'},
-        {"step_cutoff", required_argument, NULL, 's'},
-        {"gc_interval", required_argument, NULL, 'g'},
+        {"database", required_argument, NULL, 1},
+        {"number_of_simulations", required_argument, NULL, 2},
+        {"base_seed", required_argument, NULL, 3},
+        {"thread_count", required_argument, NULL, 4},
+        {"step_cutoff", required_argument, NULL, 5},
+        {"gc_interval", required_argument, NULL, 6},
+        {"gc_threshold", required_argument, NULL, 7},
         {NULL, 0, NULL, 0}
         // last element of options array needs to be filled with zeros
     };
@@ -43,6 +44,7 @@ int main(int argc, char **argv) {
     int thread_count;
     int step_cutoff;
     long int gc_interval;
+    int gc_threshold;
     bool logging = true;
 
     while ((c = getopt_long_only(
@@ -52,29 +54,35 @@ int main(int argc, char **argv) {
 
         switch (c) {
 
-        case 'd':
+        case 1:
             database = optarg;
             break;
 
-        case 'n':
+        case 2:
             number_of_simulations = atoi(optarg);
             break;
 
-        case 'b':
+        case 3:
             base_seed = atoi(optarg);
             break;
 
-        case 't':
+        case 4:
             thread_count = atoi(optarg);
             break;
 
-        case 's':
+        case 5:
             step_cutoff = atoi(optarg);
             break;
 
-        case 'g':
+        case 6:
             gc_interval = atoi(optarg);
             break;
+
+        case 7:
+            gc_threshold = atoi(optarg);
+            break;
+
+
 
         default:
             // if an unexpected argument is passed, exit
@@ -93,6 +101,7 @@ int main(int argc, char **argv) {
         thread_count,
         step_cutoff,
         gc_interval,
+        gc_threshold,
         true
         );
 

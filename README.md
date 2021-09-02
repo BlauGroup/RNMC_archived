@@ -41,7 +41,7 @@ Run the test using `test.sh` from the root directory of the repository.
 RNMC is run as follows:
 
 ```
-RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 -gc_interval=10
+RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 --gc_interval=10 --gc_threshold=1
 ```
 
 - `database`: a sqlite database containing the reaction network, initial state and metadata. The simulation trajectories are also written into the database
@@ -49,7 +49,8 @@ RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread
 - `base_seed`: seeds used are `base_seed, base_seed+1, ..., base_seed+number_of_simulations-1`
 - `thread_count`: is how many threads to use.
 - `step_cutoff`: how many steps in each simulation
-- `gc_interval`: if simulations run for a long time, the dependency graph can grow quite large. The dispatcher sweeps through it every `gc_interval` seconds and frees rarely used parts. You probably want to do a sweep every hour or so if you are running large simulations.
+- `gc_interval`: if simulations run for a long time, the dependency graph can grow quite large. The dispatcher sweeps through it every `gc_interval` seconds and frees "rarely" used parts. You probably want to do a sweep every hour or so if you are running large simulations.
+- `gc_threshold`: controls what is meant by "rarely" for garbage collection. Increasing the threshold means more of the dependency graph will be garbage collected.
 
 ### The Reaction Network Database
 

@@ -111,6 +111,7 @@ Dispatcher *new_dispatcher(
     int number_of_threads,
     int step_cutoff,
     long int gc_interval,
+    int gc_threshold,
     bool logging) {
 
 
@@ -144,6 +145,7 @@ Dispatcher *new_dispatcher(
     dispatcher->step_cutoff = step_cutoff;
     dispatcher->start_time = time(NULL);
     dispatcher->gc_interval = gc_interval;
+    dispatcher->gc_threshold = gc_threshold;
 
     return dispatcher;
 }
@@ -228,7 +230,10 @@ void run_dispatcher(Dispatcher *dispatcher) {
                 previous_time_since_start = time_since_start;
 
                 int number_of_nodes_freed =
-                    garbage_collect_dependency_graph(dispatcher->reaction_network);
+                    garbage_collect_dependency_graph(
+                        dispatcher->reaction_network,
+                        dispatcher->gc_threshold
+                        );
 
                 sprintf(
                     log_buffer,
