@@ -49,7 +49,7 @@ RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread
 - `base_seed`: seeds used are `base_seed, base_seed+1, ..., base_seed+number_of_simulations-1`
 - `thread_count`: is how many threads to use.
 - `step_cutoff`: how many steps in each simulation
-- `gc_interval`: if simulations run for a long time, the dependency graph can grow quite large. The dispatcher sweeps through it every `gc_interval` seconds and frees unused parts. You probably want to do a sweep every hour or so if you are running large simulations.
+- `gc_interval`: if simulations run for a long time, the dependency graph can grow quite large. The dispatcher sweeps through it every `gc_interval` seconds and frees rarely used parts. You probably want to do a sweep every hour or so if you are running large simulations.
 
 ### The Reaction Network Database
 
