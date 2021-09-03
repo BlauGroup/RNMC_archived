@@ -54,7 +54,7 @@ RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread
 
 ### The Reaction Network Database
 
-There should be 4 tales in the reaction network database:
+There should be 4 tables in the reaction network database:
 ```
     CREATE TABLE metadata (
             number_of_species   INTEGER NOT NULL,
