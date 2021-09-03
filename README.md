@@ -41,7 +41,7 @@ Run the test using `test.sh` from the root directory of the repository.
 RNMC is run as follows:
 
 ```
-RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 --gc_interval=10 --gc_threshold=1
+RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 --gc_interval=10 --gc_threshold=2
 ```
 
 - `database`: a sqlite database containing the reaction network, initial state and metadata. The simulation trajectories are also written into the database
