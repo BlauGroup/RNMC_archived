@@ -51,7 +51,11 @@ typedef struct reactionNetwork {
   DependentsNode *dependency_graph;
 } ReactionNetwork;
 
-ReactionNetwork *new_reaction_network(sqlite3 *database);
+ReactionNetwork *new_reaction_network(
+    sqlite3 *reaction_network_database,
+    sqlite3 *initial_state_database
+    );
+
 void free_reaction_network(ReactionNetwork *reaction_network);
 
 DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index);

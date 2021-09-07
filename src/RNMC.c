@@ -6,7 +6,8 @@
 void print_usage() {
     puts(
         "Usage: specify the following options\n"
-        "--database\n"
+        "--reaction_database\n"
+        "--initial_state_database\n"
         "--number_of_simulations\n"
         "--base_seed\n"
         "--thread_count\n"
@@ -17,20 +18,21 @@ void print_usage() {
 
 int main(int argc, char **argv) {
 
-    if (argc != 8) {
+    if (argc != 9) {
         print_usage();
         exit(EXIT_FAILURE);
     }
 
 
     struct option long_options[] = {
-        {"database", required_argument, NULL, 1},
-        {"number_of_simulations", required_argument, NULL, 2},
-        {"base_seed", required_argument, NULL, 3},
-        {"thread_count", required_argument, NULL, 4},
-        {"step_cutoff", required_argument, NULL, 5},
-        {"gc_interval", required_argument, NULL, 6},
-        {"gc_threshold", required_argument, NULL, 7},
+        {"reaction_database", required_argument, NULL, 1},
+        {"initial_state_database", required_argument, NULL, 2},
+        {"number_of_simulations", required_argument, NULL, 3},
+        {"base_seed", required_argument, NULL, 4},
+        {"thread_count", required_argument, NULL, 5},
+        {"step_cutoff", required_argument, NULL, 6},
+        {"gc_interval", required_argument, NULL, 7},
+        {"gc_threshold", required_argument, NULL, 8},
         {NULL, 0, NULL, 0}
         // last element of options array needs to be filled with zeros
     };
@@ -38,7 +40,8 @@ int main(int argc, char **argv) {
     int c;
     int option_index = 0;
 
-    char *database;
+    char *reaction_database;
+    char *initial_state_database;
     int number_of_simulations;
     int base_seed;
     int thread_count;
@@ -55,30 +58,33 @@ int main(int argc, char **argv) {
         switch (c) {
 
         case 1:
-            database = optarg;
+            reaction_database = optarg;
             break;
 
         case 2:
+            initial_state_database = optarg;
+
+        case 3:
             number_of_simulations = atoi(optarg);
             break;
 
-        case 3:
+        case 4:
             base_seed = atoi(optarg);
             break;
 
-        case 4:
+        case 5:
             thread_count = atoi(optarg);
             break;
 
-        case 5:
+        case 6:
             step_cutoff = atoi(optarg);
             break;
 
-        case 6:
+        case 7:
             gc_interval = atoi(optarg);
             break;
 
-        case 7:
+        case 8:
             gc_threshold = atoi(optarg);
             break;
 
@@ -95,7 +101,8 @@ int main(int argc, char **argv) {
     }
 
     Dispatcher *dispatcher = new_dispatcher(
-        database,
+        reaction_database,
+        initial_state_database,
         number_of_simulations,
         base_seed,
         thread_count,

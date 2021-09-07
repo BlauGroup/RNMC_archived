@@ -5,10 +5,9 @@ mkShell rec {
                   gsl
                   sqlite
                   # lldb
-                  # gdb
-                  # valgrind
-                  # clang
-                  # sqlitebrowser
+                  gdb
+                  valgrind
+                  clang
                 ];
 
   CLANGD_PATH = builtins.concatStringsSep ":" [

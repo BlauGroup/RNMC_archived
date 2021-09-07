@@ -55,7 +55,8 @@ int get_simulation_history(
     SimulationHistory **simulation_history);
 
 typedef struct dispatcher {
-    sqlite3 *database;
+    sqlite3 *reaction_database;
+    sqlite3 *initial_state_database;
     sqlite3_stmt *insert_trajectory_stmt;
     ReactionNetwork *reaction_network;
     HistoryQueue *history_queue;
@@ -72,7 +73,8 @@ typedef struct dispatcher {
 } Dispatcher;
 
 Dispatcher *new_dispatcher(
-    char *database_file,
+    char *reaction_database_file,
+    char *initial_state_database_file,
     int number_of_simulations,
     int base_seed,
     int number_of_threads,

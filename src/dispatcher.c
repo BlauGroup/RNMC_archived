@@ -105,7 +105,8 @@ char sql_remove_duplicate_trajectories[] =
 
 
 Dispatcher *new_dispatcher(
-    char *database_file,
+    char *reaction_database_file,
+    char *initial_state_database_file,
     int number_of_simulations,
     int base_seed,
     int number_of_threads,
@@ -116,21 +117,27 @@ Dispatcher *new_dispatcher(
 
 
     Dispatcher *dispatcher = calloc(1,sizeof(Dispatcher));
-    sqlite3_open(database_file, &dispatcher->database);
+    sqlite3_open(reaction_database_file, &dispatcher->reaction_database);
+    sqlite3_open(initial_state_database_file, &dispatcher->initial_state_database);
 
     int rc = sqlite3_prepare_v2(
-        dispatcher->database,
+        dispatcher->initial_state_database,
         sql_insert_trajectory,
         -1,
         &dispatcher->insert_trajectory_stmt,
         NULL);
 
     if (rc != SQLITE_OK) {
-        printf("new_dispatcher error %s\n", sqlite3_errmsg(dispatcher->database));
+        printf("new_dispatcher error %s\n", sqlite3_errmsg(
+                   dispatcher->initial_state_database));
         return NULL;
     }
 
-    dispatcher->reaction_network = new_reaction_network(dispatcher->database);
+    dispatcher->reaction_network = new_reaction_network(
+        dispatcher->reaction_database,
+        dispatcher->initial_state_database
+        );
+
     dispatcher->history_queue = new_history_queue();
     dispatcher->seed_queue = new_seed_queue(number_of_simulations, base_seed);
     dispatcher->number_of_threads = number_of_threads;
@@ -152,7 +159,8 @@ Dispatcher *new_dispatcher(
 
 void free_dispatcher(Dispatcher *dispatcher) {
     sqlite3_finalize(dispatcher->insert_trajectory_stmt);
-    sqlite3_close(dispatcher->database);
+    sqlite3_close(dispatcher->reaction_database);
+    sqlite3_close(dispatcher->initial_state_database);
     free_reaction_network(dispatcher->reaction_network);
     free_history_queue(dispatcher->history_queue);
     free_seed_queue(dispatcher->seed_queue);
@@ -272,7 +280,7 @@ void run_dispatcher(Dispatcher *dispatcher) {
     // we don't check if simulations already exist in the database.
     // That would be mad slow. Instead, we scan for duplicates
     // and remove them at the very end.
-    sqlite3_exec(dispatcher->database, sql_remove_duplicate_trajectories, 0, 0, 0);
+    sqlite3_exec(dispatcher->initial_state_database, sql_remove_duplicate_trajectories, 0, 0, 0);
 }
 
 void record_simulation_history(
@@ -286,7 +294,7 @@ void record_simulation_history(
     int rc;
     Chunk *chunk = simulation_history->first_chunk;
 
-    sqlite3_exec(dispatcher->database, "BEGIN", 0, 0, 0);
+    sqlite3_exec(dispatcher->initial_state_database, "BEGIN", 0, 0, 0);
 
     while (chunk) {
         for (i = 0; i < chunk->next_free_index; i++) {
@@ -306,15 +314,15 @@ void record_simulation_history(
             count += 1;
 
             if (count % TRANSACTION_SIZE == 0) {
-                sqlite3_exec(dispatcher->database, "COMMIT", 0, 0, 0);
-                sqlite3_exec(dispatcher->database, "BEGIN", 0, 0, 0);
+                sqlite3_exec(dispatcher->initial_state_database, "COMMIT", 0, 0, 0);
+                sqlite3_exec(dispatcher->initial_state_database, "BEGIN", 0, 0, 0);
             }
 
         }
         chunk = chunk->next_chunk;
     }
 
-    sqlite3_exec(dispatcher->database, "COMMIT", 0, 0, 0);
+    sqlite3_exec(dispatcher->initial_state_database, "COMMIT", 0, 0, 0);
 
     // free simulation history once we have inserted it into the db
     free_simulation_history(simulation_history);

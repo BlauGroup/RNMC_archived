@@ -25,7 +25,10 @@ char sql_get_reactions[] =
     "reactant_1, reactant_2, product_1, product_2, rate FROM reactions;";
 
 
-ReactionNetwork *new_reaction_network(sqlite3 *database) {
+ReactionNetwork *new_reaction_network(
+    sqlite3 *reaction_network_database,
+    sqlite3 *initial_state_database
+    ) {
     ReactionNetwork *reaction_network = calloc(1, sizeof(ReactionNetwork));
 
 
@@ -38,10 +41,11 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
 
 
     rc = sqlite3_prepare_v2(
-        database, sql_get_metadata, -1, &get_metadata_stmt, NULL);
+        reaction_network_database, sql_get_metadata, -1, &get_metadata_stmt, NULL);
 
     if (rc != SQLITE_OK) {
-        printf("new_reaction_network error %s\n", sqlite3_errmsg(database));
+        printf("new_reaction_network error %s\n",
+               sqlite3_errmsg(reaction_network_database));
         return NULL;
     }
 
@@ -91,9 +95,15 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
 
 
     rc = sqlite3_prepare_v2(
-        database, sql_get_reactions, -1, &get_reactions_stmt, NULL);
+        reaction_network_database,
+        sql_get_reactions,
+        -1,
+        &get_reactions_stmt,
+        NULL);
+
     if (rc != SQLITE_OK) {
-        printf("new_reaction_network error %s\n", sqlite3_errmsg(database));
+        printf("new_reaction_network error %s\n",
+               sqlite3_errmsg(reaction_network_database));
         return NULL;
     }
 
@@ -130,9 +140,15 @@ ReactionNetwork *new_reaction_network(sqlite3 *database) {
         reaction_network->number_of_species, sizeof(int));
 
     rc = sqlite3_prepare_v2(
-        database, sql_get_initial_state, -1, &get_initial_state_stmt, NULL);
+        initial_state_database,
+        sql_get_initial_state,
+        -1,
+        &get_initial_state_stmt,
+        NULL);
+
     if (rc != SQLITE_OK) {
-        printf("new_reaction_network error %s\n", sqlite3_errmsg(database));
+        printf("new_reaction_network error %s\n",
+               sqlite3_errmsg(initial_state_database));
         return NULL;
     }
 
