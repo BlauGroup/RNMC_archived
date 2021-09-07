@@ -41,10 +41,11 @@ Run the test using `test.sh` from the root directory of the repository.
 RNMC is run as follows:
 
 ```
-RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 --gc_interval=10 --gc_threshold=1
+RNMC --reaction_database=rn.sqlite --initial_state_database=initial_state.sqlite --number_of_simulations=1000 --base_seed=1000 --thread_count=8 --step_cutoff=200 --gc_interval=10 --gc_threshold=1
 ```
 
-- `database`: a sqlite database containing the reaction network, initial state and metadata. The simulation trajectories are also written into the database
+- `reaction_database`: a sqlite database containing the reaction network and metadata.
+- `initial_state_database` : a sqlite database containing initial state. The simulation trajectories are also written into the database
 - `number_of_simulation`: an integer specifying how many simulations to run
 - `base_seed`: seeds used are `base_seed, base_seed+1, ..., base_seed+number_of_simulations-1`
 - `thread_count`: is how many threads to use.
@@ -54,7 +55,7 @@ RNMC --database=rn.sqlite --number_of_simulations=1000 --base_seed=1000 --thread
 
 ### The Reaction Network Database
 
-There should be 4 tables in the reaction network database:
+There should be 2 tables in the reaction network database:
 ```
     CREATE TABLE metadata (
             number_of_species   INTEGER NOT NULL,
@@ -79,7 +80,7 @@ the factors can be used to modify rates of reactions which have zero or two reac
     );
 
 ```
-
+There are 2 tables in the initial state database:
 ```
     CREATE TABLE trajectories (
             seed         INTEGER NOT NULL,
