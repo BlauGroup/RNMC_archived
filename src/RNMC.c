@@ -13,6 +13,7 @@ void print_usage() {
         "--thread_count\n"
         "--step_cutoff\n"
         "--gc_interval\n"
+        "--gc_threshold\n"
         );
 }
 
