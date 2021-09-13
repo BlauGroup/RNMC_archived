@@ -221,7 +221,9 @@ int garbage_collect_dependency_graph(
 
 
         if (node->number_of_occurrences > 0 &&
-            node->number_of_occurrences <= gc_threshold) {
+            node->number_of_occurrences <= gc_threshold &&
+            node->dependents != NULL
+            ) {
 
             pthread_mutex_lock(&node->mutex);
             free(node->dependents);
