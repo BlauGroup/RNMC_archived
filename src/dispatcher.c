@@ -232,8 +232,8 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
             time_since_start = time(0) - dispatcher->start_time;
 
-            if ( time_since_start != previous_time_since_start &&
-                 time_since_start % dispatcher->gc_interval == 0) {
+            if ( time_since_start - previous_time_since_start >
+                 dispatcher->gc_interval ) {
 
                 previous_time_since_start = time_since_start;
 
