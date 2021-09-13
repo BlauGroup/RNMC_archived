@@ -270,6 +270,8 @@ void run_dispatcher(Dispatcher *dispatcher) {
             }
 
             if (! flag)
+                // the only way you get here is if the simulation queue is empty
+                // and all of the workers have finished.
                 break;
 
         }
