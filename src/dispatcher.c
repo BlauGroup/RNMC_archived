@@ -195,7 +195,6 @@ void run_dispatcher(Dispatcher *dispatcher) {
     bool flag;
     char log_buffer[256];
     long int time_since_start;
-    long int previous_time_since_start;
     int seed;
 
 
@@ -219,6 +218,8 @@ void run_dispatcher(Dispatcher *dispatcher) {
     }
 
 
+    long int previous_time_since_start = time(0) - dispatcher->start_time;
+
     while (true) {
 
 
@@ -226,7 +227,6 @@ void run_dispatcher(Dispatcher *dispatcher) {
             dispatcher->history_queue,
             &simulation_history);
 
-        long int previous_time_since_start = time(0) - dispatcher->start_time;
 
         while (seed != -1) {
 
