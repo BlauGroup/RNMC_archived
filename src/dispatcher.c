@@ -261,10 +261,9 @@ void run_dispatcher(Dispatcher *dispatcher) {
                 simulation_history, seed);
 
         }
+        else {
 
-
-        // checking if we have finished
-        if (seed == -1) {
+            // checking if we have finished
             flag = false;
             for (i = 0; i < dispatcher->number_of_threads; i++) {
                 flag = flag || dispatcher->running[i];
@@ -273,7 +272,7 @@ void run_dispatcher(Dispatcher *dispatcher) {
             if (! flag)
                 break;
 
-            }
+        }
     }
 
     dispatcher_log(dispatcher, "removing duplicate trajectories...\n");
