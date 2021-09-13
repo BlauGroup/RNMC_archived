@@ -222,36 +222,36 @@ void run_dispatcher(Dispatcher *dispatcher) {
 
     while (true) {
 
+        // garbage collection
+        time_since_start = time(0) - dispatcher->start_time;
 
-        int seed = get_simulation_history(
+        if ( time_since_start - previous_time_since_start >
+             dispatcher->gc_interval ) {
+
+            previous_time_since_start = time_since_start;
+
+            int number_of_nodes_freed =
+                garbage_collect_dependency_graph(
+                    dispatcher->reaction_network,
+                    dispatcher->gc_threshold
+                    );
+
+            sprintf(
+                log_buffer,
+                "garbage collected %d nodes\n",
+                number_of_nodes_freed);
+
+            dispatcher_log(dispatcher, log_buffer);
+
+
+        }
+
+        // recording trajectories
+        seed = get_simulation_history(
             dispatcher->history_queue,
             &simulation_history);
 
-
-        while (seed != -1) {
-
-            time_since_start = time(0) - dispatcher->start_time;
-
-            if ( time_since_start - previous_time_since_start >
-                 dispatcher->gc_interval ) {
-
-                previous_time_since_start = time_since_start;
-
-                int number_of_nodes_freed =
-                    garbage_collect_dependency_graph(
-                        dispatcher->reaction_network,
-                        dispatcher->gc_threshold
-                        );
-
-                sprintf(
-                    log_buffer,
-                    "garbage collected %d nodes\n",
-                    number_of_nodes_freed);
-
-                dispatcher_log(dispatcher, log_buffer);
-
-
-            }
+        if (seed != -1) {
 
             sprintf(log_buffer, "writing trajectory %d to database\n", seed);
             dispatcher_log(dispatcher, log_buffer);
@@ -260,20 +260,20 @@ void run_dispatcher(Dispatcher *dispatcher) {
                 dispatcher,
                 simulation_history, seed);
 
-            seed = get_simulation_history(
-                dispatcher->history_queue,
-                &simulation_history);
         }
 
-        flag = false;
-        for (i = 0; i < dispatcher->number_of_threads; i++) {
-            flag = flag || dispatcher->running[i];
-        }
 
-        if (! flag)
-            break;
+        // checking if we have finished
+        if (seed == -1) {
+            flag = false;
+            for (i = 0; i < dispatcher->number_of_threads; i++) {
+                flag = flag || dispatcher->running[i];
+            }
 
+            if (! flag)
+                break;
 
+            }
     }
 
     dispatcher_log(dispatcher, "removing duplicate trajectories...\n");
