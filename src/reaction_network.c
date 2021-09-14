@@ -27,7 +27,8 @@ char sql_get_reactions[] =
 
 ReactionNetwork *new_reaction_network(
     sqlite3 *reaction_network_database,
-    sqlite3 *initial_state_database
+    sqlite3 *initial_state_database,
+    int dependency_threshold
     ) {
     ReactionNetwork *reaction_network = calloc(1, sizeof(ReactionNetwork));
 
@@ -58,6 +59,7 @@ ReactionNetwork *new_reaction_network(
     reaction_network->factor_duplicate = sqlite3_column_double(get_metadata_stmt, 4);
 
 
+    reaction_network->dependency_threshold = dependency_threshold;
 
     // allocate number of reactants array
     reaction_network->number_of_reactants = calloc(
@@ -209,33 +211,6 @@ DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index
     return node;
 }
 
-
-int garbage_collect_dependency_graph(
-    ReactionNetwork *reaction_network,
-    int gc_threshold) {
-
-    int number_of_frees = 0;
-    int reaction;
-    for (reaction = 0; reaction < reaction_network->number_of_reactions; reaction++) {
-        DependentsNode *node = reaction_network->dependency_graph + reaction;
-
-
-        if (node->number_of_occurrences > 0 &&
-            node->number_of_occurrences <= gc_threshold &&
-            node->dependents != NULL
-            ) {
-
-            pthread_mutex_lock(&node->mutex);
-            free(node->dependents);
-            node->dependents = NULL;
-            number_of_frees++;
-            pthread_mutex_unlock(&node->mutex);
-        }
-
-    }
-
-    return number_of_frees;
-}
 
 void compute_dependency_node(ReactionNetwork *reaction_network, int index) {
 

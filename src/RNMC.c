@@ -12,14 +12,13 @@ void print_usage() {
         "--base_seed\n"
         "--thread_count\n"
         "--step_cutoff\n"
-        "--gc_interval\n"
-        "--gc_threshold\n"
+        "--dependency_threshold\n"
         );
 }
 
 int main(int argc, char **argv) {
 
-    if (argc != 9) {
+    if (argc != 8) {
         print_usage();
         exit(EXIT_FAILURE);
     }
@@ -32,8 +31,7 @@ int main(int argc, char **argv) {
         {"base_seed", required_argument, NULL, 4},
         {"thread_count", required_argument, NULL, 5},
         {"step_cutoff", required_argument, NULL, 6},
-        {"gc_interval", required_argument, NULL, 7},
-        {"gc_threshold", required_argument, NULL, 8},
+        {"dependency_threshold", required_argument, NULL, 7},
         {NULL, 0, NULL, 0}
         // last element of options array needs to be filled with zeros
     };
@@ -47,8 +45,7 @@ int main(int argc, char **argv) {
     int base_seed;
     int thread_count;
     int step_cutoff;
-    long int gc_interval;
-    int gc_threshold;
+    int dependency_threshold;
     bool logging = true;
 
     while ((c = getopt_long_only(
@@ -82,14 +79,8 @@ int main(int argc, char **argv) {
             break;
 
         case 7:
-            gc_interval = atoi(optarg);
+            dependency_threshold = atoi(optarg);
             break;
-
-        case 8:
-            gc_threshold = atoi(optarg);
-            break;
-
-
 
         default:
             // if an unexpected argument is passed, exit
@@ -108,8 +99,7 @@ int main(int argc, char **argv) {
         base_seed,
         thread_count,
         step_cutoff,
-        gc_interval,
-        gc_threshold,
+        dependency_threshold,
         true
         );
 
