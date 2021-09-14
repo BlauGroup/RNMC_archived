@@ -50,8 +50,7 @@ RNMC --reaction_database=rn.sqlite --initial_state_database=initial_state.sqlite
 - `base_seed`: seeds used are `base_seed, base_seed+1, ..., base_seed+number_of_simulations-1`
 - `thread_count`: is how many threads to use.
 - `step_cutoff`: how many steps in each simulation
-- `gc_interval`: if simulations run for a long time, the dependency graph can grow quite large. The dispatcher sweeps through it every `gc_interval` seconds and frees "rarely" used parts. You probably want to do a sweep every hour or so if you are running large simulations.
-- `gc_threshold`: controls what is meant by "rarely" for garbage collection. Increasing the threshold means more of the dependency graph will be garbage collected. If `gc_threshold = 0, then no garbage collection will occour.
+- `dependency_threshold`: if simulations run for a long time, the dependency graph can grow quite large. We slow down its growth by only computing the dependency node corresponding to a reaction after it has been seen `dependency_threshold` times. Set to zero if you want to compute dependents on first occurrence. 
 
 ### The Reaction Network Database
 
@@ -59,10 +58,7 @@ There should be 2 tables in the reaction network database:
 ```
     CREATE TABLE metadata (
             number_of_species   INTEGER NOT NULL,
-            number_of_reactions INTEGER NOT NULL,
-            factor_zero         REAL NOT NULL,
-            factor_two          REAL NOT NULL,
-            factor_duplicate    REAL NOT NULL
+            number_of_reactions INTEGER NOT NULL
     );
 ```
 the factors can be used to modify rates of reactions which have zero or two reactants, or have duplicate reactants.
@@ -80,7 +76,7 @@ the factors can be used to modify rates of reactions which have zero or two reac
     );
 
 ```
-There are 2 tables in the initial state database:
+There are 3 tables in the initial state database:
 ```
     CREATE TABLE trajectories (
             seed         INTEGER NOT NULL,
@@ -88,6 +84,13 @@ There are 2 tables in the initial state database:
             reaction_id  INTEGER NOT NULL,
             time         REAL NOT NULL
     );
+```
+
+```
+    CREATE TABLE factors (
+            factor_zero         REAL NOT NULL,
+            factor_two          REAL NOT NULL,
+            factor_duplicate    REAL NOT NULL)
 ```
 
 ```
