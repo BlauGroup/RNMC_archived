@@ -194,6 +194,24 @@ void run_dispatcher(Dispatcher *dispatcher) {
     char log_buffer[256];
     int seed;
 
+    // general logging to make sure everything is set correctly
+    sprintf(log_buffer, "factor zero: %e",
+            dispatcher->reaction_network->factor_zero);
+    dispatcher_log(dispatcher, log_buffer);
+
+    sprintf(log_buffer, "factor two: %e",
+            dispatcher->reaction_network->factor_two);
+    dispatcher_log(dispatcher, log_buffer);
+
+    sprintf(log_buffer, "factor duplicate: %e",
+            dispatcher->reaction_network->factor_duplicate);
+    dispatcher_log(dispatcher, log_buffer);
+
+    sprintf(log_buffer, "dependency threshold: %d",
+            dispatcher->reaction_network->dependency_threshold);
+    dispatcher_log(dispatcher, log_buffer);
+
+
 
     for (i = 0; i < dispatcher->number_of_threads; i++) {
         simulation = new_simulator_payload(
