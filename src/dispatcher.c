@@ -195,19 +195,19 @@ void run_dispatcher(Dispatcher *dispatcher) {
     int seed;
 
     // general logging to make sure everything is set correctly
-    sprintf(log_buffer, "factor zero: %e",
+    sprintf(log_buffer, "factor zero: %.2e\n",
             dispatcher->reaction_network->factor_zero);
     dispatcher_log(dispatcher, log_buffer);
 
-    sprintf(log_buffer, "factor two: %e",
+    sprintf(log_buffer, "factor two: %.2e\n",
             dispatcher->reaction_network->factor_two);
     dispatcher_log(dispatcher, log_buffer);
 
-    sprintf(log_buffer, "factor duplicate: %e",
+    sprintf(log_buffer, "factor duplicate: %.2e\n",
             dispatcher->reaction_network->factor_duplicate);
     dispatcher_log(dispatcher, log_buffer);
 
-    sprintf(log_buffer, "dependency threshold: %d",
+    sprintf(log_buffer, "dependency threshold: %d\n",
             dispatcher->reaction_network->dependency_threshold);
     dispatcher_log(dispatcher, log_buffer);
 
