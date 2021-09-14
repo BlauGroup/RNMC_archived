@@ -17,6 +17,9 @@ void free_dependents_node(DependentsNode *dependents_node) {
 char sql_get_metadata[] =
     "SELECT * FROM metadata;";
 
+char sql_get_factors[] =
+    "SELECT factor_zero, factor_two, factor_duplicate FROM factors;";
+
 char sql_get_initial_state[] =
     "SELECT * FROM initial_state;";
 
@@ -34,6 +37,7 @@ ReactionNetwork *new_reaction_network(
 
 
     sqlite3_stmt *get_metadata_stmt;
+    sqlite3_stmt *get_factors_stmt;
     sqlite3_stmt *get_initial_state_stmt;
     sqlite3_stmt *get_reactions_stmt;
     int rc;
@@ -54,9 +58,20 @@ ReactionNetwork *new_reaction_network(
     sqlite3_step(get_metadata_stmt);
     reaction_network->number_of_species = sqlite3_column_int(get_metadata_stmt, 0);
     reaction_network->number_of_reactions = sqlite3_column_int(get_metadata_stmt, 1);
-    reaction_network->factor_zero = sqlite3_column_double(get_metadata_stmt, 2);
-    reaction_network->factor_two = sqlite3_column_double(get_metadata_stmt, 3);
-    reaction_network->factor_duplicate = sqlite3_column_double(get_metadata_stmt, 4);
+
+    rc = sqlite3_prepare_v2(
+        initial_state_database, sql_get_factors, -1, &get_factors_stmt, NULL);
+
+    if (rc != SQLITE_OK) {
+        printf("new_reaction_network error %s\n",
+               sqlite3_errmsg(reaction_network_database));
+        return NULL;
+    }
+
+    sqlite3_step(get_factors_stmt);
+    reaction_network->factor_zero = sqlite3_column_double(get_factors_stmt, 0);
+    reaction_network->factor_two = sqlite3_column_double(get_factors_stmt, 1);
+    reaction_network->factor_duplicate = sqlite3_column_double(get_factors_stmt, 2);
 
 
     reaction_network->dependency_threshold = dependency_threshold;
