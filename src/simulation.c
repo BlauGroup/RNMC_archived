@@ -101,62 +101,85 @@ void free_simulation(Simulation *simulation) {
 }
 
 bool step(Simulation *simulation) {
-  int m;
-  double dt;
-  bool dead_end = false;
-  int next_reaction = simulation->solver->event(simulation->solver, &dt);
-  int reaction_index;
-  double new_propensity;
+    int m;
+    double dt;
+    bool dead_end = false;
+    int next_reaction = simulation->solver->event(simulation->solver, &dt);
+    int reaction_index;
+    double new_propensity;
 
-  if (next_reaction < 0) dead_end = true;
-  else {
-    // update steps and time
-    simulation->step++;
-    simulation->time += dt;
+    if (next_reaction < 0) dead_end = true;
+    else {
+        // update steps and time
+        simulation->step++;
+        simulation->time += dt;
 
-    // record reaction
-    insert_history_element(
-        simulation->history,
-        next_reaction,
-        simulation->time);
+        // record reaction
+        insert_history_element(
+            simulation->history,
+            next_reaction,
+            simulation->time);
 
-    // update state
-    for (m = 0;
-         m < simulation->reaction_network->number_of_reactants[next_reaction];
-         m++)
+        // update state
+        for (m = 0;
+             m < simulation->reaction_network->number_of_reactants[next_reaction];
+             m++)
 
-      simulation->state[simulation->reaction_network->reactants[next_reaction][m]]--;
+            simulation->state[
+                simulation->reaction_network->reactants[next_reaction][m]]--;
 
-    for (m = 0;
-         m < simulation->reaction_network->number_of_products[next_reaction];
-         m++)
+        for (m = 0;
+             m < simulation->reaction_network->number_of_products[next_reaction];
+             m++)
 
-      simulation->state[simulation->reaction_network->products[next_reaction][m]]++;
+            simulation->state[
+                simulation->reaction_network->products[next_reaction][m]]++;
 
-    // update propensities
-    DependentsNode *dependents_node = get_dependency_node(
-        simulation->reaction_network,
-        next_reaction);
+        // update propensities
+        DependentsNode *dependents_node = get_dependency_node(
+            simulation->reaction_network,
+            next_reaction);
 
-    int number_of_updates = dependents_node->number_of_dependents;
-    int *dependents = dependents_node->dependents;
 
-    for (m = 0; m < number_of_updates; m++) {
-      reaction_index = dependents[m];
-      new_propensity = compute_propensity(
-          simulation->reaction_network,
-          simulation->state,
-          reaction_index);
+        int *dependents = dependents_node->dependents;
 
-      simulation->solver->update(
-          simulation->solver,
-          reaction_index,
-          new_propensity);
+        if (dependents) {
+            // relevent section of dependency graph has been computed
+            int number_of_updates = dependents_node->number_of_dependents;
+
+            for (m = 0; m < number_of_updates; m++) {
+
+                reaction_index = dependents[m];
+                new_propensity = compute_propensity(
+                    simulation->reaction_network,
+                    simulation->state,
+                    reaction_index);
+
+                simulation->solver->update(
+                    simulation->solver,
+                    reaction_index,
+                    new_propensity);
+            }
+        } else {
+            // relevent section of dependency graph has not been computed
+            for (reaction_index = 0;
+                 reaction_index < simulation->reaction_network->number_of_reactions;
+                 reaction_index++) {
+
+                new_propensity = compute_propensity(
+                    simulation->reaction_network,
+                    simulation->state,
+                    reaction_index);
+
+                simulation->solver->update(
+                    simulation->solver,
+                    reaction_index,
+                    new_propensity);
+
+            }
+        }
 
     }
-
-
-  }
 
   return dead_end;
 }

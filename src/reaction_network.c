@@ -202,11 +202,14 @@ DependentsNode *get_dependency_node(ReactionNetwork *reaction_network, int index
 
     pthread_mutex_lock(&node->mutex);
 
-    node->number_of_occurrences++;
-
-    if (! node->dependents)
+    // if we haven't computed this node
+    // and the reaction has been seen more times than the threshold:
+    // compute it
+    if ( ! node->dependents &&
+         node->number_of_occurrences >= reaction_network->dependency_threshold )
         compute_dependency_node(reaction_network, index);
 
+    node->number_of_occurrences++;
     pthread_mutex_unlock(&node->mutex);
     return node;
 }
