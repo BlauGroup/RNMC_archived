@@ -78,7 +78,7 @@ ReactionNetwork *new_reaction_network(
 
     // allocate number of reactants array
     reaction_network->number_of_reactants = calloc(
-        reaction_network->number_of_reactions, sizeof(int));
+        reaction_network->number_of_reactions, sizeof(uint8_t));
 
     // allocate reactant array
     int *reactants_values = calloc(
@@ -93,7 +93,7 @@ ReactionNetwork *new_reaction_network(
 
     // allocate number of products array
     reaction_network->number_of_products = calloc(
-        reaction_network->number_of_reactions, sizeof(int));
+        reaction_network->number_of_reactions, sizeof(uint8_t));
 
     // allocate products array
     int *products_values = calloc(

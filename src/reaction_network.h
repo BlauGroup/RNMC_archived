@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 #include <stdio.h>
+#include <stdint.h>
 
 
 typedef struct dependentsNode {
@@ -30,11 +31,11 @@ typedef struct reactionNetwork {
     // we assume that each reaction has zero, one or two reactants
 
     // array storing the number of reactants of each reaction
-    int *number_of_reactants;
+    uint8_t *number_of_reactants;
     int **reactants; // array storing the reactants of each reaction
 
     // array storing the number of products of each reaction
-    int *number_of_products;
+    uint8_t *number_of_products;
     int **products; // array storing the products of each reaction
 
 
